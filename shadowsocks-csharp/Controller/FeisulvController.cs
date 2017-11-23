@@ -1,4 +1,5 @@
 ﻿using Shadowsocks.Model;
+using Shadowsocks.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,9 @@ namespace Shadowsocks.Controller
     class FeisulvController
     {
         ShadowsocksController shadowsocksController;
+        Configuration _config;
+        List<FeisulvServer> feisulvServers;
+        Server serverModel;
 
         string serverStringContent;
         public Configuration Config
@@ -24,44 +28,72 @@ namespace Shadowsocks.Controller
         public FeisulvController(ShadowsocksController shadowsocksController)
         {
             this.shadowsocksController = shadowsocksController;
+            this._config = shadowsocksController.GetCurrentConfiguration();
 
         }
 
-        string GetRawServerString()
-        {
 
-            return "";
-
-        }
         /// <summary>
         /// 向服务器发送http请求，获取服务器信息
         /// </summary>
         /// <returns></returns>
-        public string GetServerInfo()
+        public void GetServerListFormFeisulv()
         {
-            try
+            string content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
+            content = content.Replace(" ", "");//去空格
+            string[] contents = content.Split('\n');
+            foreach (var rec in contents)
             {
-                WinINet.SetIEProxy(false, false, "", "");
-                string url = @"http://www.feisulv.com/test.php";
-                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                request.Method = "GET";
-                request.Timeout = 6000;
-                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36";
-                request.Accept = "text/plain, */*; q=0.01";
-                request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream myResponseStream = response.GetResponseStream();
-                StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.UTF8);
-                string recString = myStreamReader.ReadToEnd();
-                myStreamReader.Close();
-                WinINet.SetIEProxy(true, true, "127.0.0.1:1080", "");
-                return recString;
+                string[] recs = rec.Split('|');
+                FeisulvServer temp = new FeisulvServer(recs[1], recs[2]);
+                feisulvServers.Add(temp);
             }
-            catch (Exception ex)
+        }
+        /// <summary>
+        /// 从飞速率服务器获取节点更新数据
+        /// </summary>
+        /// <returns></returns>
+        public void GetNodeUpdate(Configuration _config)
+        {
+            List<Server> models = GetExistPort();
+            string ServerString = GetServerListFormFeisulv();//通过http请求获取服务器节点信息
+            foreach (Server model in models)
             {
-                string errormsg = ex.Message;
-                throw;
+                List<Server> servers = GetServerFrom_feisulv(model);//将服务器信息转化为Server实例
+                _config.configs.AddRange(servers);
             }
+        }
+
+        public void FeisulvNodeUpdate()
+        {
+
+        }
+
+
+        public List<Server> GetExistPort()
+        {
+            List<Server> newservers = new List<Server>();
+            List<int> ports = new List<int>();
+            List<Server> servermodels = new List<Server>();
+            foreach (Server server in _config.configs)
+            {
+                if (server.group.IndexOf("飞速率") >= 0)
+                {
+                    int port = server.server_port;
+                    if (!ports.Contains(port))
+                    {
+                        ports.Add(port);
+                        servermodels.Add(server);
+                    }
+                }
+                else
+                {
+                    newservers.Add(server);//保留非飞速率的节点
+                }
+            }
+            //_config.configs = newservers;//删除所有飞速率节点
+
+            return servermodels;
         }
 
         /// <summary>
@@ -71,14 +103,14 @@ namespace Shadowsocks.Controller
         /// <param name="force_group"></param>
         /// <param name="toLast"></param>
         /// <returns></returns>
-        public bool GetFeisulvServerList(Server server, out List<Server> servers)
+        public bool GetFeisulvServerList(Server server)
         {
             try
             {
 
                 _config.configs.Add(server);
-                string recString = GetServerInfo();//通过http请求获取服务器信息
-                servers = GetServerFrom_feisulv(recString, server);//将服务器信息转化为Server实例
+                string recString = GetServerListFormFeisulv();//通过http请求获取服务器信息
+                List<Server> servers = GetServerFrom_feisulv(recString, server);//将服务器信息转化为Server实例
                 foreach (Server tmp in servers)
                 {
                     if (!_config.ServerIsExist(tmp))
@@ -86,7 +118,7 @@ namespace Shadowsocks.Controller
                         _config.configs.Add(tmp);
                     }
                 }
-                SaveConfig(_config);
+                shadowsocksController.SaveConfig(_config);
                 return true;
             }
             catch (Exception e)
@@ -96,34 +128,34 @@ namespace Shadowsocks.Controller
             }
 
         }
-        /// <summary>
-        /// 获取服务器ip
-        /// </summary>
-        /// <param name="recString">通过http请求的服务器信息</param>
-        /// <returns></returns>
-        public List<Server> GetServerFrom_feisulv(string recString, Server servermodel)
-        {
-            List<Server> servers = new List<Server>();
-            recString = recString.Replace(" ", "");//去空格
-            string[] recStrings = recString.Split('\n');
 
-            foreach (var rec in recStrings)
+        public Server GetFeisulvServerModelFromConfig()
+        {
+            foreach (Server aserver in _config.configs)
             {
-                string[] recs = rec.Split('|');
-                Server temp = servermodel.Clone();
-                temp.server = recs[1];
-                temp.remarks = recs[2];
-                temp.group = "飞速率";
-                servers.Add(temp);
+                if (aserver.group.StartsWith("飞速率"))
+                {
+                    this.serverModel = aserver.Clone() ;
+                    
+                }
             }
-            return servers;
         }
     }
 
-    class Feisulv_Product
-    {
-        string productName;
+        class Feisulv_Product
+        {
+            string productName;
+            string
+        }
+        class FeisulvServer
+        {
+            string name;
+            string Domin;
+            public FeisulvServer(string Domin, string name)
+            {
+                this.name = name;
+                this.Domin = Domin;
 
+            }
+        }
     }
-
-}

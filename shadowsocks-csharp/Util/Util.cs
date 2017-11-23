@@ -183,6 +183,31 @@ namespace Shadowsocks.Util
 
         }
 
+        public static string GetHttpContentFromUrl(string url)
+        {
+            try
+            {
+                WinINet.SetIEProxy(false, false, "", "");
+                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
+                request.Method = "GET";
+                request.Timeout = 6000;
+                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36";
+                request.Accept = "text/plain, */*; q=0.01";
+                request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream myResponseStream = response.GetResponseStream();
+                StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.UTF8);
+                string recString = myStreamReader.ReadToEnd();
+                myStreamReader.Close();
+                WinINet.SetIEProxy(true, true, "127.0.0.1:1080", "");
+                return recString;
+            }
+            catch (Exception ex)
+            {
+                string errormsg = ex.Message;
+                throw;
+            }
+        }
 
         public static bool isLocal(IPAddress ip)
         {
