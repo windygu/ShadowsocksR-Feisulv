@@ -20,6 +20,7 @@ namespace Shadowsocks
 #if !_CONSOLE
         static MenuViewController _viewController;
 #endif
+        static FeisulvController feisulvController;
 
         /// <summary>
         /// 应用程序的主入口点。
@@ -80,6 +81,7 @@ namespace Shadowsocks
 #if !_CONSOLE
                 _viewController = new MenuViewController(_controller);
 #endif
+                feisulvController = new FeisulvController(_controller);
 
                 _controller.Start();
 

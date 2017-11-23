@@ -648,7 +648,7 @@ namespace Shadowsocks.View
             const string def_group = "!(no group)";
             string select_group = "";
 
-            
+
             for (int i = 0; i < configuration.configs.Count; i++)
             {
                 string group_name;
@@ -1193,7 +1193,7 @@ namespace Shadowsocks.View
             catch
             {
 
-            } 
+            }
         }
 
         private bool ScanQRCode(Screen screen, Bitmap fullImage, Rectangle cropRect, out string url, out Rectangle rect)
@@ -1276,7 +1276,6 @@ namespace Shadowsocks.View
                 int h = height * 3 / div;
                 Point[] pt = new Point[5] {
                     new Point(1, 1),
-
                     new Point(0, 0),
                     new Point(0, 2),
                     new Point(2, 0),
@@ -1327,7 +1326,7 @@ namespace Shadowsocks.View
             return new Rectangle(0, 0, 0, 0);
         }
 
-        private void ScanScreenQRCode(bool ss_only)
+        private void ScanScreenQRCode(bool ss_only )
         {
             Thread.Sleep(100);
             foreach (Screen screen in Screen.AllScreens)
@@ -1362,7 +1361,7 @@ namespace Shadowsocks.View
                             {
                                 splash.FormClosed += splash_FormClosed;
                             }
-                            else if (!ss_only)
+                            else if (!ss_only)//true
                             {
                                 _urlToOpen = url;
                                 //if (url.StartsWith("http://") || url.StartsWith("https://"))
@@ -1407,8 +1406,7 @@ namespace Shadowsocks.View
             foreach (Screen screen in Screen.AllScreens)
             {
                 Point screen_size = Util.Utils.GetScreenPhysicalSize();
-                using (Bitmap fullImage = new Bitmap(screen_size.X,
-                                                screen_size.Y))
+                using (Bitmap fullImage = new Bitmap(screen_size.X, screen_size.Y))
                 {
                     using (Graphics g = Graphics.FromImage(fullImage))
                     {
@@ -1428,9 +1426,11 @@ namespace Shadowsocks.View
 
                         string url;
                         Rectangle rect;
+                        //扫描 成功后进入if
                         if (stretch == 1 ? ScanQRCode(screen, fullImage, cropRect, out url, out rect) : ScanQRCodeStretch(screen, fullImage, cropRect, stretch, out url, out rect))
                         {
                             var success = controller.AddServerBySSURLFrom_feisulv(url);
+                            //扫描成功后的红框框
                             QRCodeSplashForm splash = new QRCodeSplashForm();
                             if (success)
                             {

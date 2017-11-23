@@ -23,12 +23,12 @@ namespace Shadowsocks.Controller
         // controller:
         // handle user actions
         // manipulates UI
-        // interacts with low level logic testtest
+        // interacts with low level logic 
 
         private Listener _listener;
         private List<Listener> _port_map_listener;
         private PACServer _pacServer;
-        private Configuration _config;
+        public Configuration _config;
         private ServerTransferTotal _transfer;
         public IPRangeSet _rangeSet;
 #if !_CONSOLE
@@ -64,16 +64,6 @@ namespace Shadowsocks.Controller
         {
             _config = Configuration.Load();
             _transfer = ServerTransferTotal.Load();
-
-            Server temp = _config.configs[1].Clone();
-            temp.server = "1.1.1.1";
-            temp.remarks = "test";
-            temp.group = "飞速率";
-            _config.configs.Add(temp);
-
-            SaveConfig(_config);
-            _config = Configuration.Load();
-
 
             foreach (Server server in _config.configs)
             {
@@ -219,7 +209,7 @@ namespace Shadowsocks.Controller
 
         public bool AddServerBySSURL(string ssURL, string force_group = null, bool toLast = false)
         {
-            if (ssURL.StartsWith("ss://", StringComparison.OrdinalIgnoreCase) || ssURL.StartsWith("ssr://", StringComparison.OrdinalIgnoreCase))
+            if (Util.Utils.SSRURLIsVaild(ssURL))
             {
                 try
                 {
@@ -250,125 +240,7 @@ namespace Shadowsocks.Controller
             }
         }
 
-        /// <summary>
-        /// 扫描新速率官网的二维码获取服务器信息
-        /// </summary>
-        /// <param name="ssURL">扫描的二维码信息</param>
-        /// <param name="force_group"></param>
-        /// <param name="toLast"></param>
-        /// <returns></returns>
-        public bool AddServerBySSURLFrom_feisulv(string ssURL, string force_group = null, bool toLast = false)
-        {
-            if (ssURL.StartsWith("ss://", StringComparison.OrdinalIgnoreCase) || ssURL.StartsWith("ssr://", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    var server = new Server(ssURL, force_group);
-                    if (toLast)
-                    {
-                        _config.configs.Add(server);
-                    }
-                    else
-                    {
-                        int index = _config.index + 1;
-                        if (index < 0 || index > _config.configs.Count)
-                            index = _config.configs.Count;
-                        string recString = GetServerInfo();//通过http请求获取服务器信息
-                        List<Server> servers = GetServerFrom_feisulv(recString,server);//将服务器信息转化为Server实例
-                        foreach (Server tmp in servers)
-                        {
-                            if (!_config.ServerIsExist(tmp))
-                            {
-                                _config.configs.Add(tmp);
-                            }
-                        }
-                        // _config.configs.Insert(index, server);
 
-                    }
-                    SaveConfig(_config);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Logging.LogUsefulException(e);
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-
-        /// <summary>
-        /// 向服务器发送http请求，获取服务器信息
-        /// </summary>
-        /// <returns></returns>
-        public string GetServerInfo()
-        {
-            try
-            {
-                WinINet.SetIEProxy(false, false, "", "");
-                string url = @"http://www.feisulv.com/test.php";
-                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                request.Method = "GET";
-                request.Timeout = 6000;
-                request.UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36";
-                request.Accept = "text/plain, */*; q=0.01";
-                request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream myResponseStream = response.GetResponseStream();
-                StreamReader myStreamReader = new StreamReader(myResponseStream, Encoding.UTF8);
-                string recString = myStreamReader.ReadToEnd();
-                myStreamReader.Close();
-                WinINet.SetIEProxy(true, true, "127.0.0.1:1080", "");
-                return recString;
-            }
-            catch (Exception ex)
-            {
-                string errormsg = ex.Message;
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 获取服务器ip
-        /// </summary>
-        /// <param name="recString">通过http请求的服务器信息</param>
-        /// <returns></returns>
-        public List<Server> GetServerFrom_feisulv(string recString,Server servermodel)
-        {
-            List<Server> servers = new List<Server>();
-            recString = recString.Replace(" ", "");//去空格
-            string[] recStrings=recString.Split('\n');
-            
-            foreach(var rec in recStrings)
-            {
-                string[] recs = rec.Split('|');
-                Server temp = servermodel.Clone();
-                temp.server = recs[1];
-                temp.remarks = recs[2];
-                temp.group = "飞速率";
-                servers.Add(temp);
-            }           
-            return servers;
-        }
-
-        public List<string> GetServerNameFrom_feisulv(string recString)
-        {
-            List<string> names = new List<string>();
-            recString = recString.Replace(" ", "");//去空格
-            Regex regex = new Regex(@"\|[一-龥()]+");
-            var matches = regex.Matches(recString);
-            foreach (var item in matches)
-            {
-                string name = item.ToString();
-                name = name.Replace("|", "");
-                names.Add(name);
-            }
-            return names;
-        }
 
         public void ToggleMode(ProxyMode mode)
         {

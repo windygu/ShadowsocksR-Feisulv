@@ -790,5 +790,10 @@ namespace Shadowsocks.View
                 IPTextBox.UseSystemPasswordChar = true;
             }
         }
+
+        private void ConfigForm_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

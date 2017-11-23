@@ -177,6 +177,13 @@ namespace Shadowsocks.Util
             }
         }
 
+        public static bool SSRURLIsVaild(string ssURL)
+        {
+            return ssURL.StartsWith("ss://", StringComparison.OrdinalIgnoreCase) || ssURL.StartsWith("ssr://", StringComparison.OrdinalIgnoreCase);
+
+        }
+
+
         public static bool isLocal(IPAddress ip)
         {
             byte[] addr = ip.GetAddressBytes();
