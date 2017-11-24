@@ -795,5 +795,10 @@ namespace Shadowsocks.View
         {
 
         }
+
+        private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
+        {
+
+        }
     }
 }

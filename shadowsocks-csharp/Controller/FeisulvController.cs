@@ -13,22 +13,24 @@ namespace Shadowsocks.Controller
     class FeisulvController
     {
         ShadowsocksController shadowsocksController;
-        Configuration _config;
+
         List<FeisulvServer> feisulvServers;
-        Server serverModel;
+        List<Feisulv_Product> products;
+
 
         string serverStringContent;
-        public Configuration Config
+        public Configuration _config
         {
             get
             {
-                return shadowsocksController._config;
+                return shadowsocksController.GetCurrentConfiguration();
             }
         }
         public FeisulvController(ShadowsocksController shadowsocksController)
         {
             this.shadowsocksController = shadowsocksController;
-            this._config = shadowsocksController.GetCurrentConfiguration();
+            this.products = new List<Feisulv_Product>();
+
 
         }
 
@@ -56,10 +58,10 @@ namespace Shadowsocks.Controller
         public void GetNodeUpdate(Configuration _config)
         {
             List<Server> models = GetExistPort();
-            string ServerString = GetServerListFormFeisulv();//通过http请求获取服务器节点信息
+            GetServerListFormFeisulv();//通过http请求获取服务器节点信息
             foreach (Server model in models)
             {
-                List<Server> servers = GetServerFrom_feisulv(model);//将服务器信息转化为Server实例
+                List<Server> servers = GetServerFrom_feisulv();//将服务器信息转化为Server实例
                 _config.configs.AddRange(servers);
             }
         }
@@ -129,33 +131,52 @@ namespace Shadowsocks.Controller
 
         }
 
-        public Server GetFeisulvServerModelFromConfig()
+        public void GetFeisulvProductsFromConfig()
         {
+            List<int> ports = new List<int>();
+
             foreach (Server aserver in _config.configs)
             {
                 if (aserver.group.StartsWith("飞速率"))
                 {
-                    this.serverModel = aserver.Clone() ;
-                    
+                    if (!ports.Contains(aserver.server_port))
+                    {
+                        Feisulv_Product aproduct = new Feisulv_Product();
+                        aproduct.Name = aserver.remarks;
+                        aproduct.Port = aserver.server_port;
+                        aproduct.serverModel = aserver.Clone();
+                        this.products.Add(aproduct);
+
+
+
+                    }
                 }
             }
         }
+
+       
     }
 
-        class Feisulv_Product
+    class Feisulv_Product
+    {
+        public string Name;
+        public int Port;
+        public Server serverModel;
+        public Server CloneFromProduct()
         {
-            string productName;
-            string
+            return serverModel.Clone();
         }
-        class FeisulvServer
-        {
-            string name;
-            string Domin;
-            public FeisulvServer(string Domin, string name)
-            {
-                this.name = name;
-                this.Domin = Domin;
 
-            }
+    }
+    class FeisulvServer
+    {
+        string name;
+        string Domin;
+        public FeisulvServer(string Domin, string name)
+        {
+            this.name = name;
+            this.Domin = Domin;
+
         }
     }
+}

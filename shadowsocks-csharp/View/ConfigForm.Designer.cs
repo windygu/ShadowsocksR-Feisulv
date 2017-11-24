@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panel2 = new System.Windows.Forms.Panel();
             this.DeleteButton = new System.Windows.Forms.Button();
             this.AddButton = new System.Windows.Forms.Button();
@@ -69,14 +70,17 @@
             this.TextProtocolParam = new System.Windows.Forms.TextBox();
             this.IPLabel = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel7 = new System.Windows.Forms.TableLayoutPanel();
-            this.LinkUpdate = new System.Windows.Forms.LinkLabel();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this.DownButton = new System.Windows.Forms.Button();
             this.UpButton = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
+            this.LinkUpdate = new System.Windows.Forms.LinkLabel();
             this.tableLayoutPanel5 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.MyCancelButton = new System.Windows.Forms.Button();
             this.OKButton = new System.Windows.Forms.Button();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.PictureQRcode)).BeginInit();
             this.tableLayoutPanel2.SuspendLayout();
             this.ServerGroupBox.SuspendLayout();
@@ -87,6 +91,7 @@
             this.tableLayoutPanel4.SuspendLayout();
             this.tableLayoutPanel5.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
+            this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel2
@@ -101,11 +106,11 @@
             // 
             // DeleteButton
             // 
-            this.DeleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.DeleteButton.Location = new System.Drawing.Point(130, 0);
+            this.DeleteButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DeleteButton.Location = new System.Drawing.Point(120, 0);
             this.DeleteButton.Margin = new System.Windows.Forms.Padding(0);
             this.DeleteButton.Name = "DeleteButton";
-            this.DeleteButton.Size = new System.Drawing.Size(120, 34);
+            this.DeleteButton.Size = new System.Drawing.Size(130, 34);
             this.DeleteButton.TabIndex = 2;
             this.DeleteButton.Text = "&Delete";
             this.DeleteButton.UseVisualStyleBackColor = true;
@@ -113,6 +118,8 @@
             // 
             // AddButton
             // 
+            this.AddButton.ContextMenuStrip = this.contextMenuStrip1;
+            this.AddButton.Dock = System.Windows.Forms.DockStyle.Fill;
             this.AddButton.Location = new System.Drawing.Point(0, 0);
             this.AddButton.Margin = new System.Windows.Forms.Padding(0);
             this.AddButton.Name = "AddButton";
@@ -620,8 +627,8 @@
             this.tableLayoutPanel7.ColumnCount = 1;
             this.tableLayoutPanel7.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel7.Controls.Add(this.ServersListBox, 0, 0);
-            this.tableLayoutPanel7.Controls.Add(this.LinkUpdate, 0, 2);
             this.tableLayoutPanel7.Controls.Add(this.tableLayoutPanel4, 0, 1);
+            this.tableLayoutPanel7.Controls.Add(this.LinkUpdate, 0, 2);
             this.tableLayoutPanel7.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel7.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel7.Name = "tableLayoutPanel7";
@@ -632,19 +639,6 @@
             this.tableLayoutPanel7.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel7.Size = new System.Drawing.Size(250, 512);
             this.tableLayoutPanel7.TabIndex = 16;
-            // 
-            // LinkUpdate
-            // 
-            this.LinkUpdate.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.LinkUpdate.AutoSize = true;
-            this.LinkUpdate.Location = new System.Drawing.Point(59, 432);
-            this.LinkUpdate.Margin = new System.Windows.Forms.Padding(5);
-            this.LinkUpdate.Name = "LinkUpdate";
-            this.LinkUpdate.Size = new System.Drawing.Size(131, 12);
-            this.LinkUpdate.TabIndex = 5;
-            this.LinkUpdate.TabStop = true;
-            this.LinkUpdate.Text = "New version available";
-            this.LinkUpdate.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkUpdate_LinkClicked);
             // 
             // tableLayoutPanel4
             // 
@@ -657,23 +651,25 @@
             this.tableLayoutPanel4.Controls.Add(this.UpButton, 0, 1);
             this.tableLayoutPanel4.Controls.Add(this.DeleteButton, 1, 0);
             this.tableLayoutPanel4.Controls.Add(this.AddButton, 0, 0);
-            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.tableLayoutPanel4.Controls.Add(this.button1, 0, 2);
+            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(0, 297);
             this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(0, 5, 0, 0);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 2;
+            this.tableLayoutPanel4.RowCount = 3;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(250, 68);
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(250, 88);
             this.tableLayoutPanel4.TabIndex = 8;
             // 
             // DownButton
             // 
-            this.DownButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.DownButton.Location = new System.Drawing.Point(130, 34);
+            this.DownButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.DownButton.Location = new System.Drawing.Point(120, 34);
             this.DownButton.Margin = new System.Windows.Forms.Padding(0);
             this.DownButton.Name = "DownButton";
-            this.DownButton.Size = new System.Drawing.Size(120, 34);
+            this.DownButton.Size = new System.Drawing.Size(130, 34);
             this.DownButton.TabIndex = 4;
             this.DownButton.Text = "Down";
             this.DownButton.UseVisualStyleBackColor = true;
@@ -681,6 +677,7 @@
             // 
             // UpButton
             // 
+            this.UpButton.Dock = System.Windows.Forms.DockStyle.Fill;
             this.UpButton.Location = new System.Drawing.Point(0, 34);
             this.UpButton.Margin = new System.Windows.Forms.Padding(0);
             this.UpButton.Name = "UpButton";
@@ -689,6 +686,28 @@
             this.UpButton.Text = "Up";
             this.UpButton.UseVisualStyleBackColor = true;
             this.UpButton.Click += new System.EventHandler(this.UpButton_Click);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(3, 71);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(108, 14);
+            this.button1.TabIndex = 5;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // LinkUpdate
+            // 
+            this.LinkUpdate.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.LinkUpdate.AutoSize = true;
+            this.LinkUpdate.Location = new System.Drawing.Point(59, 442);
+            this.LinkUpdate.Margin = new System.Windows.Forms.Padding(5);
+            this.LinkUpdate.Name = "LinkUpdate";
+            this.LinkUpdate.Size = new System.Drawing.Size(131, 12);
+            this.LinkUpdate.TabIndex = 5;
+            this.LinkUpdate.TabStop = true;
+            this.LinkUpdate.Text = "New version available";
+            this.LinkUpdate.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkUpdate_LinkClicked);
             // 
             // tableLayoutPanel5
             // 
@@ -752,6 +771,20 @@
             this.OKButton.UseVisualStyleBackColor = true;
             this.OKButton.Click += new System.EventHandler(this.OKButton_Click);
             // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.testToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(125, 26);
+            this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
+            // 
+            // testToolStripMenuItem
+            // 
+            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
+            this.testToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.testToolStripMenuItem.Text = "更新节点";
+            // 
             // ConfigForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -787,6 +820,7 @@
             this.tableLayoutPanel5.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
+            this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -842,6 +876,9 @@
         private System.Windows.Forms.Label labelProtocolParam;
         private System.Windows.Forms.TextBox TextProtocolParam;
         private System.Windows.Forms.CheckBox IPLabel;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
     }
 }
 
