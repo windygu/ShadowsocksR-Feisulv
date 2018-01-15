@@ -14,8 +14,8 @@ namespace Shadowsocks.Controller
     {
         ShadowsocksController shadowsocksController;
 
-        List<FeisulvServer> feisulvServers;
-        List<Feisulv_Product> products;
+        List<FeisulvHost> feisulvHosts;
+        List<FeisulvProduct> products;
 
 
         string serverStringContent;
@@ -29,7 +29,7 @@ namespace Shadowsocks.Controller
         public FeisulvController(ShadowsocksController shadowsocksController)
         {
             this.shadowsocksController = shadowsocksController;
-            this.products = new List<Feisulv_Product>();
+            this.products = new List<FeisulvProduct>();
 
 
         }
@@ -41,29 +41,69 @@ namespace Shadowsocks.Controller
         /// <returns></returns>
         public void GetServerListFormFeisulv()
         {
-            string content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
-            content = content.Replace(" ", "");//去空格
+            string content = GetServerContentFromFeisulv();
+
             string[] contents = content.Split('\n');
             foreach (var rec in contents)
             {
                 string[] recs = rec.Split('|');
-                FeisulvServer temp = new FeisulvServer(recs[1], recs[2]);
-                feisulvServers.Add(temp);
+                FeisulvHost temp = new FeisulvHost(recs[1], recs[2]);
+                feisulvHosts.Add(temp);
             }
         }
+
+
+        public string  GetServerContentFromFeisulv()
+        {
+            string content;
+
+            try
+            {
+                 content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
+
+            }
+            catch (Exception )
+            {
+                
+                throw;
+            }
+            content = content.Replace(" ", "");//去空格
+            return content;
+
+        }
+
+        public List<Server> GetServerInstance(List<FeisulvProduct> products,List<FeisulvHost> hosts)
+        {
+            List<Server> servers = new List<Server>();
+            foreach (FeisulvProduct product in products)
+            {
+                foreach (FeisulvHost host in hosts)
+                {
+                    Server server = product.CloneFromProduct();
+                    server.server = host.Domin;
+                //    server.remarks
+                }
+            }
+
+            return servers;
+        }
+
         /// <summary>
         /// 从飞速率服务器获取节点更新数据
         /// </summary>
         /// <returns></returns>
         public void GetNodeUpdate(Configuration _config)
+        { 
+            GetExistProduct();
+            this.ClearFeisulvServers();
+
+            List<Server> servers= GetServerInstance(this.products,this.feisulvHosts);
+            _config.configs.AddRange(servers);
+        }
+
+        private void ClearFeisulvServers()
         {
-            List<Server> models = GetExistPort();
-            GetServerListFormFeisulv();//通过http请求获取服务器节点信息
-            foreach (Server model in models)
-            {
-                List<Server> servers = GetServerFrom_feisulv();//将服务器信息转化为Server实例
-                _config.configs.AddRange(servers);
-            }
+          
         }
 
         public void FeisulvNodeUpdate()
@@ -72,8 +112,11 @@ namespace Shadowsocks.Controller
         }
 
 
-        public List<Server> GetExistPort()
+        public List<FeisulvProduct> GetExistProduct()
         {
+            products = new List<FeisulvProduct>();
+            FeisulvProduct product;
+
             List<Server> newservers = new List<Server>();
             List<int> ports = new List<int>();
             List<Server> servermodels = new List<Server>();
@@ -85,7 +128,12 @@ namespace Shadowsocks.Controller
                     if (!ports.Contains(port))
                     {
                         ports.Add(port);
-                        servermodels.Add(server);
+
+                        product = new FeisulvProduct();
+                        product.serverModel = server;
+                        product.serverModel.server = "123456789";
+                        products.Add(product);
+
                     }
                 }
                 else
@@ -95,7 +143,7 @@ namespace Shadowsocks.Controller
             }
             //_config.configs = newservers;//删除所有飞速率节点
 
-            return servermodels;
+            return products ;
         }
 
         /// <summary>
@@ -105,31 +153,31 @@ namespace Shadowsocks.Controller
         /// <param name="force_group"></param>
         /// <param name="toLast"></param>
         /// <returns></returns>
-        public bool GetFeisulvServerList(Server server)
-        {
-            try
-            {
+        //public bool GetFeisulvServerList(Server server)
+        //{
+        //    try
+        //    {
 
-                _config.configs.Add(server);
-                string recString = GetServerListFormFeisulv();//通过http请求获取服务器信息
-                List<Server> servers = GetServerFrom_feisulv(recString, server);//将服务器信息转化为Server实例
-                foreach (Server tmp in servers)
-                {
-                    if (!_config.ServerIsExist(tmp))
-                    {
-                        _config.configs.Add(tmp);
-                    }
-                }
-                shadowsocksController.SaveConfig(_config);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Logging.LogUsefulException(e);
-                return false;
-            }
+        //        _config.configs.Add(server);
+        //        string recString = GetServerListFormFeisulv();//通过http请求获取服务器信息
+        //        List<Server> servers = GetServerFrom_feisulv(recString, server);//将服务器信息转化为Server实例
+        //        foreach (Server tmp in servers)
+        //        {
+        //            if (!_config.ServerIsExist(tmp))
+        //            {
+        //                _config.configs.Add(tmp);
+        //            }
+        //        }
+        //        shadowsocksController.SaveConfig(_config);
+        //        return true;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Logging.LogUsefulException(e);
+        //        return false;
+        //    }
 
-        }
+        //}
 
         public void GetFeisulvProductsFromConfig()
         {
@@ -141,7 +189,7 @@ namespace Shadowsocks.Controller
                 {
                     if (!ports.Contains(aserver.server_port))
                     {
-                        Feisulv_Product aproduct = new Feisulv_Product();
+                        FeisulvProduct aproduct = new FeisulvProduct();
                         aproduct.Name = aserver.remarks;
                         aproduct.Port = aserver.server_port;
                         aproduct.serverModel = aserver.Clone();
@@ -157,7 +205,7 @@ namespace Shadowsocks.Controller
        
     }
 
-    class Feisulv_Product
+    class FeisulvProduct
     {
         public string Name;
         public int Port;
@@ -168,15 +216,14 @@ namespace Shadowsocks.Controller
         }
 
     }
-    class FeisulvServer
+    class FeisulvHost
     {
-        string name;
-        string Domin;
-        public FeisulvServer(string Domin, string name)
+        public string name;
+        public string Domin;
+        public FeisulvHost(string Domin, string name)
         {
             this.name = name;
             this.Domin = Domin;
-
         }
     }
 }
