@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Shadowsocks.Controller
 {
-    class FeisulvController
+public    class FeisulvController
     {
         ShadowsocksController shadowsocksController;
 
@@ -29,9 +29,7 @@ namespace Shadowsocks.Controller
         public FeisulvController(ShadowsocksController shadowsocksController)
         {
             this.shadowsocksController = shadowsocksController;
-            this.products = new List<FeisulvProduct>();
-
-
+     
         }
 
 
@@ -39,8 +37,9 @@ namespace Shadowsocks.Controller
         /// 向服务器发送http请求，获取服务器信息
         /// </summary>
         /// <returns></returns>
-        public void GetServerListFormFeisulv()
+        public void GetFeiSulvHosts()
         {
+            feisulvHosts = new List<FeisulvHost>();
             string content = GetServerContentFromFeisulv();
 
             string[] contents = content.Split('\n');
@@ -81,7 +80,10 @@ namespace Shadowsocks.Controller
                 {
                     Server server = product.CloneFromProduct();
                     server.server = host.Domin;
-                //    server.remarks
+                    server.remarks = host.name;
+                    server.group = "飞速率-" + product.Port;
+                    servers.Add(server);
+
                 }
             }
 
@@ -92,13 +94,16 @@ namespace Shadowsocks.Controller
         /// 从飞速率服务器获取节点更新数据
         /// </summary>
         /// <returns></returns>
-        public void GetNodeUpdate(Configuration _config)
+        public void FeisulvNodeUpdate()
         { 
-            GetExistProduct();
-            this.ClearFeisulvServers();
+            GetExistProductAndClear();
+            GetFeiSulvHosts();
+          //  this.ClearFeisulvServers();
 
             List<Server> servers= GetServerInstance(this.products,this.feisulvHosts);
             _config.configs.AddRange(servers);
+            Controllers.shadowsocksController.SaveServersConfig(_config);
+
         }
 
         private void ClearFeisulvServers()
@@ -106,13 +111,8 @@ namespace Shadowsocks.Controller
           
         }
 
-        public void FeisulvNodeUpdate()
-        {
 
-        }
-
-
-        public List<FeisulvProduct> GetExistProduct()
+        public List<FeisulvProduct> GetExistProductAndClear()
         {
             products = new List<FeisulvProduct>();
             FeisulvProduct product;
@@ -120,16 +120,19 @@ namespace Shadowsocks.Controller
             List<Server> newservers = new List<Server>();
             List<int> ports = new List<int>();
             List<Server> servermodels = new List<Server>();
+            List<Server> serversToClear = new List<Server>();
             foreach (Server server in _config.configs)
             {
                 if (server.group.IndexOf("飞速率") >= 0)
                 {
                     int port = server.server_port;
+                    serversToClear.Add(server);
+
                     if (!ports.Contains(port))
                     {
                         ports.Add(port);
-
                         product = new FeisulvProduct();
+                        product.Port = port;
                         product.serverModel = server;
                         product.serverModel.server = "123456789";
                         products.Add(product);
@@ -140,6 +143,11 @@ namespace Shadowsocks.Controller
                 {
                     newservers.Add(server);//保留非飞速率的节点
                 }
+            }
+            foreach (Server item in serversToClear)
+            {
+                _config.configs.Remove(item);
+
             }
             //_config.configs = newservers;//删除所有飞速率节点
 
@@ -205,7 +213,7 @@ namespace Shadowsocks.Controller
        
     }
 
-    class FeisulvProduct
+    public class FeisulvProduct
     {
         public string Name;
         public int Port;
@@ -216,7 +224,7 @@ namespace Shadowsocks.Controller
         }
 
     }
-    class FeisulvHost
+    public class FeisulvHost
     {
         public string name;
         public string Domin;

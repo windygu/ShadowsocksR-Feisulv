@@ -8,6 +8,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using Shadowsocks.Model;
+
 #if !_CONSOLE
 using Shadowsocks.View;
 #endif
@@ -21,6 +22,8 @@ namespace Shadowsocks
         static MenuViewController _viewController;
 #endif
         static FeisulvController feisulvController;
+
+
 
         /// <summary>
         /// 应用程序的主入口点。
@@ -82,6 +85,12 @@ namespace Shadowsocks
                 _viewController = new MenuViewController(_controller);
 #endif
                 feisulvController = new FeisulvController(_controller);
+
+
+                Controllers.feisulvController = feisulvController;
+                Controllers.shadowsocksController = _controller;
+
+
 
                 _controller.Start();
 

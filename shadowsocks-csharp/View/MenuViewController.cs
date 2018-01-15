@@ -54,6 +54,8 @@ namespace Shadowsocks.View
         private MenuItem SelectRandomItem;
         private MenuItem sameHostForSameTargetItem;
         private MenuItem UpdateItem;
+        private MenuItem DebugMenu;
+
         private ConfigForm configForm;
         private SettingsForm settingsForm;
         private ServerLogForm serverLogForm;
@@ -229,14 +231,15 @@ namespace Shadowsocks.View
                     CreateMenuItem("Server statistic...", new EventHandler(this.ShowServerLogItem_Click)),
                     CreateMenuItem("Disconnect current", new EventHandler(this.DisconnectCurrent_Click)),
                 }),
+                 DebugMenu=CreateMenuGroup("DEBUG",new MenuItem[]
+                 {
+                     CreateMenuItem("更新节点",new EventHandler(this.UpdateNodeFromFeisulv))
+                 }),
                 FlyToOutItem = CreateMenuItem("飞到境外",new EventHandler(this.GlobalModeItem_Click)),
                 CamebackChinaItem = CreateMenuItem("回到国内",new EventHandler(this.EnableItem_Click)),
 
                 otherItem= CreateMenuGroup("Others", new MenuItem[]
                 {
-
-
-
                 modeItem = CreateMenuGroup("Mode", new MenuItem[] {
                     enableItem = CreateMenuItem("Disable system proxy", new EventHandler(this.EnableItem_Click)),
                     PACModeItem = CreateMenuItem("PAC", new EventHandler(this.PACModeItem_Click)),
@@ -300,6 +303,11 @@ namespace Shadowsocks.View
                 CreateMenuItem("Quit", new EventHandler(this.Quit_Click))
             });
             this.UpdateItem.Visible = false;
+        }
+
+        private void UpdateNodeFromFeisulv(object sender, EventArgs e)
+        {
+            Controllers.feisulvController.FeisulvNodeUpdate();
         }
 
         private void controller_ConfigChanged(object sender, EventArgs e)
@@ -1326,7 +1334,7 @@ namespace Shadowsocks.View
             return new Rectangle(0, 0, 0, 0);
         }
 
-        private void ScanScreenQRCode(bool ss_only )
+        private void ScanScreenQRCode(bool ss_only)
         {
             Thread.Sleep(100);
             foreach (Screen screen in Screen.AllScreens)
@@ -1429,7 +1437,7 @@ namespace Shadowsocks.View
                         //扫描 成功后进入if
                         if (stretch == 1 ? ScanQRCode(screen, fullImage, cropRect, out url, out rect) : ScanQRCodeStretch(screen, fullImage, cropRect, stretch, out url, out rect))
                         {
-                            var success = controller.AddServerBySSURLFrom_feisulv(url);
+                            bool success = false;// = controller.AddServerBySSURLFrom_feisulv(url);
                             //扫描成功后的红框框
                             QRCodeSplashForm splash = new QRCodeSplashForm();
                             if (success)

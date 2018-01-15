@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
 using OpenDNS;
+using Shadowsocks.Controller;
 using Shadowsocks.Encryption;
 using Shadowsocks.Model;
 
