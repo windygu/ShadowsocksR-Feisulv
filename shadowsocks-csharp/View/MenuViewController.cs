@@ -220,7 +220,7 @@ namespace Shadowsocks.View
         private void LoadMenu()
         {
             this.contextMenu1 = new ContextMenu(new MenuItem[] {
-                CreateMenuItem("从飞速率官网扫描二维码",new EventHandler(this.ScanQRCodeFrom_feisulvItem_Click)),
+                CreateMenuItem("从飞速率官网批量扫描二维码",new EventHandler(this.ScanQRCodeFrom_feisulvItem_Click)),
                  ServersItem = CreateMenuGroup("Choose Server", new MenuItem[] {
                     SeperatorItem = new MenuItem("-"),
                     CreateMenuItem("Edit servers...", new EventHandler(this.Config_Click)),
@@ -368,9 +368,9 @@ namespace Shadowsocks.View
                 updateFreeNodeChecker.FreeNodeResult = updateFreeNodeChecker.FreeNodeResult.TrimEnd('\r', '\n', ' ');
                 Configuration config = controller.GetCurrentConfiguration();
                 Server selected_server = null;
-                if (config.index >= 0 && config.index < config.configs.Count)
+                if (config.index >= 0 && config.index < config.servers.Count)
                 {
-                    selected_server = config.configs[config.index];
+                    selected_server = config.servers[config.index];
                 }
                 try
                 {
@@ -479,11 +479,11 @@ namespace Shadowsocks.View
                         Dictionary<string, Server> old_servers = new Dictionary<string, Server>();
                         if (!String.IsNullOrEmpty(lastGroup))
                         {
-                            for (int i = config.configs.Count - 1; i >= 0; --i)
+                            for (int i = config.servers.Count - 1; i >= 0; --i)
                             {
-                                if (lastGroup == config.configs[i].group)
+                                if (lastGroup == config.servers[i].group)
                                 {
-                                    old_servers[config.configs[i].id] = config.configs[i];
+                                    old_servers[config.servers[i].id] = config.servers[i];
                                 }
                             }
                         }
@@ -506,7 +506,7 @@ namespace Shadowsocks.View
                                 }
                                 if (!match)
                                 {
-                                    config.configs.Add(server);
+                                    config.servers.Add(server);
                                     ++count;
                                 }
                             }
@@ -515,11 +515,11 @@ namespace Shadowsocks.View
                         }
                         foreach (KeyValuePair<string, Server> pair in old_servers)
                         {
-                            for (int i = config.configs.Count - 1; i >= 0; --i)
+                            for (int i = config.servers.Count - 1; i >= 0; --i)
                             {
-                                if (config.configs[i].id == pair.Key)
+                                if (config.servers[i].id == pair.Key)
                                 {
-                                    config.configs.RemoveAt(i);
+                                    config.servers.RemoveAt(i);
                                     break;
                                 }
                             }
@@ -530,17 +530,17 @@ namespace Shadowsocks.View
                     if (selected_server != null)
                     {
                         bool match = false;
-                        for (int i = config.configs.Count - 1; i >= 0; --i)
+                        for (int i = config.servers.Count - 1; i >= 0; --i)
                         {
-                            if (config.configs[i].id == selected_server.id)
+                            if (config.servers[i].id == selected_server.id)
                             {
                                 config.index = i;
                                 match = true;
                                 break;
                             }
-                            else if (config.configs[i].group == selected_server.group)
+                            else if (config.servers[i].group == selected_server.group)
                             {
-                                if (config.configs[i].isMatchServer(selected_server))
+                                if (config.servers[i].isMatchServer(selected_server))
                                 {
                                     config.index = i;
                                     match = true;
@@ -550,12 +550,12 @@ namespace Shadowsocks.View
                         }
                         if (!match)
                         {
-                            config.index = config.configs.Count - 1;
+                            config.index = config.servers.Count - 1;
                         }
                     }
                     else
                     {
-                        config.index = config.configs.Count - 1;
+                        config.index = config.servers.Count - 1;
                     }
                     controller.SaveServersConfig(config);
 
@@ -657,10 +657,10 @@ namespace Shadowsocks.View
             string select_group = "";
 
 
-            for (int i = 0; i < configuration.configs.Count; i++)
+            for (int i = 0; i < configuration.servers.Count; i++)
             {
                 string group_name;
-                Server server = configuration.configs[i];
+                Server server = configuration.servers[i];
                 if (string.IsNullOrEmpty(server.group))
                     group_name = def_group;
                 else
@@ -899,7 +899,7 @@ namespace Shadowsocks.View
                 {
                     string name = dlg.FileName;
                     Configuration cfg = Configuration.LoadFile(name);
-                    if (cfg.configs.Count == 1 && cfg.configs[0].server == Configuration.GetDefaultServer().server)
+                    if (cfg.servers.Count == 1 && cfg.servers[0].server == Configuration.GetDefaultServer().server)
                     {
                         MessageBox.Show("Load config file failed", "ShadowsocksR");
                     }
@@ -1151,9 +1151,9 @@ namespace Shadowsocks.View
         private void DisconnectCurrent_Click(object sender, EventArgs e)
         {
             Configuration config = controller.GetCurrentConfiguration();
-            for (int id = 0; id < config.configs.Count; ++id)
+            for (int id = 0; id < config.servers.Count; ++id)
             {
-                Server server = config.configs[id];
+                Server server = config.servers[id];
                 server.GetConnections().CloseAll();
             }
         }
@@ -1437,11 +1437,14 @@ namespace Shadowsocks.View
                         //扫描 成功后进入if
                         if (stretch == 1 ? ScanQRCode(screen, fullImage, cropRect, out url, out rect) : ScanQRCodeStretch(screen, fullImage, cropRect, stretch, out url, out rect))
                         {
-                            bool success = false;// = controller.AddServerBySSURLFrom_feisulv(url);
+                            Server server;
+                            bool success = Controllers.shadowsocksController.GetServerFromSSRURL(url, out server);
                             //扫描成功后的红框框
                             QRCodeSplashForm splash = new QRCodeSplashForm();
                             if (success)
                             {
+                                Controllers.feisulvController.AddProductFromServer(server);
+                                Controllers.feisulvController.FeisulvNodeUpdate();
                                 splash.FormClosed += splash_FormClosed;
                             }
                             else if (!ss_only)

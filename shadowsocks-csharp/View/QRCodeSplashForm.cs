@@ -92,7 +92,7 @@ namespace Shadowsocks.View
                 h = (int)(TargetRect.Height * percent + this.Size.Height * (1 - percent));
                 //codeRectView.Location = new Point(x, y);
                 //codeRectView.Size = new Size(w, h);
-                pen.Color = Color.FromArgb((int)(255 * percent), Color.Red);
+                pen.Color = Color.FromArgb((int)(255 * percent), Color.Green);
                 brush.Color = Color.FromArgb((int)(30 * percent), Color.Red);
                 g.Clear(Color.Transparent);
                 g.FillRectangle(brush, x, y, w, h);

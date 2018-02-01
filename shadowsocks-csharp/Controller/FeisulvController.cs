@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Shadowsocks.Controller
 {
-public    class FeisulvController
+    public class FeisulvController
     {
         ShadowsocksController shadowsocksController;
 
@@ -29,7 +29,7 @@ public    class FeisulvController
         public FeisulvController(ShadowsocksController shadowsocksController)
         {
             this.shadowsocksController = shadowsocksController;
-     
+
         }
 
 
@@ -52,18 +52,18 @@ public    class FeisulvController
         }
 
 
-        public string  GetServerContentFromFeisulv()
+        public string GetServerContentFromFeisulv()
         {
             string content;
 
             try
             {
-                 content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
+                content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
 
             }
-            catch (Exception )
+            catch (Exception)
             {
-                
+
                 throw;
             }
             content = content.Replace(" ", "");//去空格
@@ -71,7 +71,7 @@ public    class FeisulvController
 
         }
 
-        public List<Server> GetServerInstance(List<FeisulvProduct> products,List<FeisulvHost> hosts)
+        public List<Server> GetServerInstance(List<FeisulvProduct> products, List<FeisulvHost> hosts)
         {
             List<Server> servers = new List<Server>();
             foreach (FeisulvProduct product in products)
@@ -89,44 +89,75 @@ public    class FeisulvController
 
             return servers;
         }
-
+        public List<FeisulvProduct> DereplicationProducts()
+        {
+            List<FeisulvProduct> productsnew = new List<FeisulvProduct>();
+            foreach (var item in this.products)
+            {
+                bool replication = false;
+                foreach (var newProductItem in productsnew)
+                {
+                    if (newProductItem.Port == item.Port)
+                    {
+                        replication = true;
+                        break;
+                    }
+                }
+                if (!replication)
+                {
+                    productsnew.Add(item);
+                }
+            }
+            return productsnew;
+        }
         /// <summary>
         /// 从飞速率服务器获取节点更新数据
         /// </summary>
         /// <returns></returns>
         public void FeisulvNodeUpdate()
-        { 
-            GetExistProductAndClear();
+        {
+            products = GetExistProductsFromConfig();
+            products = DereplicationProducts();
             GetFeiSulvHosts();
-          //  this.ClearFeisulvServers();
+            //  this.ClearFeisulvServers();
+            ClearFeisulvServers();
 
-            List<Server> servers= GetServerInstance(this.products,this.feisulvHosts);
-            _config.configs.AddRange(servers);
+            List<Server> servers = GetServerInstance(this.products, this.feisulvHosts);
+            _config.servers.AddRange(servers);
             Controllers.shadowsocksController.SaveServersConfig(_config);
 
         }
 
         private void ClearFeisulvServers()
         {
-          
+            Configuration configcopy = new Configuration();
+            configcopy.CopyFrom(_config);
+            Predicate<Server> finder = (Server s) =>
+            {
+                if (s.group.IndexOf("飞速率") >= 0)
+                {
+                    return true;
+                }
+                return false;
+            };
+
+            configcopy.servers.RemoveAll(finder);
         }
 
 
-        public List<FeisulvProduct> GetExistProductAndClear()
+        public List<FeisulvProduct> GetExistProductsFromConfig()
         {
-            products = new List<FeisulvProduct>();
+            if (this.products == null)
+            {
+                products = new List<FeisulvProduct>();
+            }
             FeisulvProduct product;
-
-            List<Server> newservers = new List<Server>();
             List<int> ports = new List<int>();
-            List<Server> servermodels = new List<Server>();
-            List<Server> serversToClear = new List<Server>();
-            foreach (Server server in _config.configs)
+            foreach (Server server in _config.servers)
             {
                 if (server.group.IndexOf("飞速率") >= 0)
                 {
                     int port = server.server_port;
-                    serversToClear.Add(server);
 
                     if (!ports.Contains(port))
                     {
@@ -134,24 +165,12 @@ public    class FeisulvController
                         product = new FeisulvProduct();
                         product.Port = port;
                         product.serverModel = server;
-                        product.serverModel.server = "123456789";
+                        product.serverModel.server = "88.88.88.88";
                         products.Add(product);
-
                     }
                 }
-                else
-                {
-                    newservers.Add(server);//保留非飞速率的节点
-                }
             }
-            foreach (Server item in serversToClear)
-            {
-                _config.configs.Remove(item);
-
-            }
-            //_config.configs = newservers;//删除所有飞速率节点
-
-            return products ;
+            return products;
         }
 
         /// <summary>
@@ -187,30 +206,31 @@ public    class FeisulvController
 
         //}
 
-        public void GetFeisulvProductsFromConfig()
+
+        internal bool AddProductFromServer(Server server)
         {
-            List<int> ports = new List<int>();
-
-            foreach (Server aserver in _config.configs)
-            {
-                if (aserver.group.StartsWith("飞速率"))
-                {
-                    if (!ports.Contains(aserver.server_port))
-                    {
-                        FeisulvProduct aproduct = new FeisulvProduct();
-                        aproduct.Name = aserver.remarks;
-                        aproduct.Port = aserver.server_port;
-                        aproduct.serverModel = aserver.Clone();
-                        this.products.Add(aproduct);
-
-
-
-                    }
-                }
-            }
+            //清除重复
+            FeisulvProduct product = new FeisulvProduct();
+            product.Name = "";
+            product.Port = server.server_port;
+            product.serverModel = server;
+            product.serverModel.server = "1234354";
+            return AddFeisulvProduct(product);
         }
 
-       
+        private bool AddFeisulvProduct(FeisulvProduct product)
+        {
+            products = GetExistProductsFromConfig();
+            foreach (FeisulvProduct item in products)
+            {
+                if (product.Port == item.Port && item.serverModel.isMatchServer(product.serverModel))//product.serverModel.password==item.serverModel.password)
+                {
+                    return false;
+                }
+            }
+            this.products.Add(product);
+            return true;
+        }
     }
 
     public class FeisulvProduct

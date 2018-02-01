@@ -208,12 +208,12 @@ namespace Shadowsocks.Controller
                     if (params_dict["action"] == "statistics")
                     {
                         Configuration config = _config;
-                        ServerSpeedLogShow[] _ServerSpeedLogList = new ServerSpeedLogShow[config.configs.Count];
+                        ServerSpeedLogShow[] _ServerSpeedLogList = new ServerSpeedLogShow[config.servers.Count];
                         Dictionary<string, object> servers = new Dictionary<string, object>();
-                        for (int i = 0; i < config.configs.Count; ++i)
+                        for (int i = 0; i < config.servers.Count; ++i)
                         {
-                            _ServerSpeedLogList[i] = config.configs[i].ServerSpeedLog().Translate();
-                            servers[config.configs[i].id] = _ServerSpeedLogList[i];
+                            _ServerSpeedLogList[i] = config.servers[i].ServerSpeedLog().Translate();
+                            servers[config.servers[i].id] = _ServerSpeedLogList[i];
                         }
                         string content = SimpleJson.SimpleJson.SerializeObject(servers);
 

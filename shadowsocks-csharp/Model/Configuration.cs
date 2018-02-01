@@ -81,7 +81,7 @@ namespace Shadowsocks.Model
     [Serializable]
     public class Configuration
     {
-        public List<Server> configs;
+        public List<Server> servers;
         public int index;
         public bool random;
         public int sysProxyMode;
@@ -156,15 +156,15 @@ namespace Shadowsocks.Model
                     {
                         UriVisitTime visit = uri2time[targetAddr];
                         int index = -1;
-                        for (int i = 0; i < configs.Count; ++i)
+                        for (int i = 0; i < servers.Count; ++i)
                         {
-                            if (configs[i].id == id)
+                            if (servers[i].id == id)
                             {
                                 index = i;
                                 break;
                             }
                         }
-                        if (index >= 0 && visit.index == index && configs[index].enable)
+                        if (index >= 0 && visit.index == index && servers[index].enable)
                         {
                             time2uri.Remove(visit);
                             visit.index = index;
@@ -199,14 +199,14 @@ namespace Shadowsocks.Model
                 if (sameHostForSameTarget && !forceRandom && targetAddr != null && uri2time.ContainsKey(targetAddr))
                 {
                     UriVisitTime visit = uri2time[targetAddr];
-                    if (visit.index < configs.Count && configs[visit.index].enable)
+                    if (visit.index < servers.Count && servers[visit.index].enable)
                     {
                         //uri2time.Remove(targetURI);
                         time2uri.Remove(visit);
                         visit.visitTime = DateTime.Now;
                         uri2time[targetAddr] = visit;
                         time2uri[visit] = targetAddr;
-                        return configs[visit.index];
+                        return servers[visit.index];
                     }
                 }
                 if (forceRandom)
@@ -214,7 +214,7 @@ namespace Shadowsocks.Model
                     int index;
                     if (filter == null && randomInGroup)
                     {
-                        index = serverStrategy.Select(configs, this.index, randomAlgorithm, delegate (Server server, Server selServer)
+                        index = serverStrategy.Select(servers, this.index, randomAlgorithm, delegate (Server server, Server selServer)
                         {
                             if (selServer != null)
                                 return selServer.group == server.group;
@@ -223,17 +223,17 @@ namespace Shadowsocks.Model
                     }
                     else
                     {
-                        index = serverStrategy.Select(configs, this.index, randomAlgorithm, filter, true);
+                        index = serverStrategy.Select(servers, this.index, randomAlgorithm, filter, true);
                     }
                     if (index == -1) return GetErrorServer();
-                    return configs[index];
+                    return servers[index];
                 }
                 else if (usingRandom && cfgRandom)
                 {
                     int index;
                     if (filter == null && randomInGroup)
                     {
-                        index = serverStrategy.Select(configs, this.index, randomAlgorithm, delegate (Server server, Server selServer)
+                        index = serverStrategy.Select(servers, this.index, randomAlgorithm, delegate (Server server, Server selServer)
                         {
                             if (selServer != null)
                                 return selServer.group == server.group;
@@ -242,7 +242,7 @@ namespace Shadowsocks.Model
                     }
                     else
                     {
-                        index = serverStrategy.Select(configs, this.index, randomAlgorithm, filter);
+                        index = serverStrategy.Select(servers, this.index, randomAlgorithm, filter);
                     }
                     if (index == -1) return GetErrorServer();
                     if (targetAddr != null)
@@ -258,24 +258,24 @@ namespace Shadowsocks.Model
                         uri2time[targetAddr] = visit;
                         time2uri[visit] = targetAddr;
                     }
-                    return configs[index];
+                    return servers[index];
                 }
                 else
                 {
-                    if (index >= 0 && index < configs.Count)
+                    if (index >= 0 && index < servers.Count)
                     {
                         int selIndex = index;
                         if (usingRandom)
                         {
-                            for (int i = 0; i < configs.Count; ++i)
+                            for (int i = 0; i < servers.Count; ++i)
                             {
-                                if (configs[selIndex].isEnable())
+                                if (servers[selIndex].isEnable())
                                 {
                                     break;
                                 }
                                 else
                                 {
-                                    selIndex = (selIndex + 1) % configs.Count;
+                                    selIndex = (selIndex + 1) % servers.Count;
                                 }
                             }
                         }
@@ -293,7 +293,7 @@ namespace Shadowsocks.Model
                             uri2time[targetAddr] = visit;
                             time2uri[visit] = targetAddr;
                         }
-                        return configs[selIndex];
+                        return servers[selIndex];
                     }
                     else
                     {
@@ -308,7 +308,7 @@ namespace Shadowsocks.Model
             portMapCache = new Dictionary<int, PortMapConfigCache>();
             Dictionary<string, Server> id2server = new Dictionary<string, Server>();
             Dictionary<string, int> server_group = new Dictionary<string, int>();
-            foreach (Server s in configs)
+            foreach (Server s in servers)
             {
                 id2server[s.id] = s;
                 if (!string.IsNullOrEmpty(s.group))
@@ -395,7 +395,7 @@ namespace Shadowsocks.Model
             {
             };
 
-            configs = new List<Server>()
+            servers = new List<Server>()
             {
                 GetDefaultServer()
             };
@@ -403,7 +403,7 @@ namespace Shadowsocks.Model
 
         public void CopyFrom(Configuration config)
         {
-            configs = config.configs;
+            servers = config.servers;
             index = config.index;
             random = config.random;
             sysProxyMode = config.sysProxyMode;
@@ -464,8 +464,8 @@ namespace Shadowsocks.Model
             }
 
             Dictionary<string, int> id = new Dictionary<string, int>();
-            if (index < 0 || index >= configs.Count) index = 0;
-            foreach (Server server in configs)
+            if (index < 0 || index >= servers.Count) index = 0;
+            foreach (Server server in servers)
             {
                 if (id.ContainsKey(server.id))
                 {
@@ -516,9 +516,9 @@ namespace Shadowsocks.Model
 
         public static void Save(Configuration config)
         {
-            if (config.index >= config.configs.Count)
+            if (config.index >= config.servers.Count)
             {
-                config.index = config.configs.Count - 1;
+                config.index = config.servers.Count - 1;
             }
             if (config.index < 0)
             {
@@ -585,7 +585,7 @@ namespace Shadowsocks.Model
 
         public bool isDefaultConfig()
         {
-            if (configs.Count == 1 && configs[0].server == Configuration.GetDefaultServer().server)
+            if (servers.Count == 1 && servers[0].server == Configuration.GetDefaultServer().server)
                 return true;
             return false;
         }
@@ -654,7 +654,7 @@ namespace Shadowsocks.Model
         //edit by sunp 20170930
         public bool ServerIsExist(Server server)
         {
-            foreach (Server tmp in configs)
+            foreach (Server tmp in servers)
             {
                 if(tmp.server == server.server && tmp.server_port == server.server_port)
                 {

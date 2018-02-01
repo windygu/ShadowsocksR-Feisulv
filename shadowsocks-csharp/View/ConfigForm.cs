@@ -56,13 +56,13 @@ namespace Shadowsocks.View
             controller.ConfigChanged += controller_ConfigChanged;
 
             LoadCurrentConfiguration();
-            if (_modifiedConfiguration.index >= 0 && _modifiedConfiguration.index < _modifiedConfiguration.configs.Count)
-                _oldSelectedID = _modifiedConfiguration.configs[_modifiedConfiguration.index].id;
+            if (_modifiedConfiguration.index >= 0 && _modifiedConfiguration.index < _modifiedConfiguration.servers.Count)
+                _oldSelectedID = _modifiedConfiguration.servers[_modifiedConfiguration.index].id;
             if (focusIndex == -1)
             {
                 int index = _modifiedConfiguration.index + 1;
-                if (index < 0 || index > _modifiedConfiguration.configs.Count)
-                    index = _modifiedConfiguration.configs.Count;
+                if (index < 0 || index > _modifiedConfiguration.servers.Count)
+                    index = _modifiedConfiguration.servers.Count;
 
                 focusIndex = index;
             }
@@ -111,7 +111,7 @@ namespace Shadowsocks.View
 
             ShowWindow();
 
-            if (focusIndex >= 0 && focusIndex < _modifiedConfiguration.configs.Count)
+            if (focusIndex >= 0 && focusIndex < _modifiedConfiguration.servers.Count)
             {
                 SetServerListSelectedIndex(focusIndex);
                 LoadSelectedServer();
@@ -201,7 +201,7 @@ namespace Shadowsocks.View
         {
             try
             {
-                if (_oldSelectedIndex == -1 || _oldSelectedIndex >= _modifiedConfiguration.configs.Count)
+                if (_oldSelectedIndex == -1 || _oldSelectedIndex >= _modifiedConfiguration.servers.Count)
                 {
                     return 0; // no changes
                 }
@@ -224,22 +224,22 @@ namespace Shadowsocks.View
                 };
                 Configuration.CheckServer(server);
                 int ret = 0;
-                if (_modifiedConfiguration.configs[_oldSelectedIndex].server != server.server
-                    || _modifiedConfiguration.configs[_oldSelectedIndex].server_port != server.server_port
-                    || _modifiedConfiguration.configs[_oldSelectedIndex].remarks_base64 != server.remarks_base64
-                    || _modifiedConfiguration.configs[_oldSelectedIndex].group != server.group
+                if (_modifiedConfiguration.servers[_oldSelectedIndex].server != server.server
+                    || _modifiedConfiguration.servers[_oldSelectedIndex].server_port != server.server_port
+                    || _modifiedConfiguration.servers[_oldSelectedIndex].remarks_base64 != server.remarks_base64
+                    || _modifiedConfiguration.servers[_oldSelectedIndex].group != server.group
                     )
                 {
                     ret = 1; // display changed
                 }
-                Server oldServer = _modifiedConfiguration.configs[_oldSelectedIndex];
+                Server oldServer = _modifiedConfiguration.servers[_oldSelectedIndex];
                 if (oldServer.isMatchServer(server))
                 {
                     server.setObfsData(oldServer.getObfsData());
                     server.setProtocolData(oldServer.getProtocolData());
                     server.enable = oldServer.enable;
                 }
-                _modifiedConfiguration.configs[_oldSelectedIndex] = server;
+                _modifiedConfiguration.servers[_oldSelectedIndex] = server;
 
                 return ret;
             }
@@ -314,9 +314,9 @@ namespace Shadowsocks.View
 
         private void LoadSelectedServer()
         {
-            if (ServersListBox.SelectedIndex >= 0 && ServersListBox.SelectedIndex < _modifiedConfiguration.configs.Count)
+            if (ServersListBox.SelectedIndex >= 0 && ServersListBox.SelectedIndex < _modifiedConfiguration.servers.Count)
             {
-                Server server = _modifiedConfiguration.configs[ServersListBox.SelectedIndex];
+                Server server = _modifiedConfiguration.servers[ServersListBox.SelectedIndex];
 
                 IPTextBox.Text = server.server;
                 NumServerPort.Value = server.server_port;
@@ -380,10 +380,10 @@ namespace Shadowsocks.View
 
         private void LoadConfiguration(Configuration configuration)
         {
-            if (ServersListBox.Items.Count != _modifiedConfiguration.configs.Count)
+            if (ServersListBox.Items.Count != _modifiedConfiguration.servers.Count)
             {
                 ServersListBox.Items.Clear();
-                foreach (Server server in _modifiedConfiguration.configs)
+                foreach (Server server in _modifiedConfiguration.servers)
                 {
                     if (!string.IsNullOrEmpty(server.group))
                     {
@@ -397,15 +397,15 @@ namespace Shadowsocks.View
             }
             else
             {
-                for (int i = 0; i < _modifiedConfiguration.configs.Count; ++i)
+                for (int i = 0; i < _modifiedConfiguration.servers.Count; ++i)
                 {
-                    if (!string.IsNullOrEmpty(_modifiedConfiguration.configs[i].group))
+                    if (!string.IsNullOrEmpty(_modifiedConfiguration.servers[i].group))
                     {
-                        ServersListBox.Items[i] = _modifiedConfiguration.configs[i].group + " - " + _modifiedConfiguration.configs[i].HiddenName();
+                        ServersListBox.Items[i] = _modifiedConfiguration.servers[i].group + " - " + _modifiedConfiguration.servers[i].HiddenName();
                     }
                     else
                     {
-                        ServersListBox.Items[i] = "      " + _modifiedConfiguration.configs[i].HiddenName();
+                        ServersListBox.Items[i] = "      " + _modifiedConfiguration.servers[i].HiddenName();
                     }
                 }
             }
@@ -477,10 +477,10 @@ namespace Shadowsocks.View
             {
                 return;
             }
-            Server server = _oldSelectedIndex >=0 && _oldSelectedIndex < _modifiedConfiguration.configs.Count
-                ? Configuration.CopyServer(_modifiedConfiguration.configs[_oldSelectedIndex])
+            Server server = _oldSelectedIndex >=0 && _oldSelectedIndex < _modifiedConfiguration.servers.Count
+                ? Configuration.CopyServer(_modifiedConfiguration.servers[_oldSelectedIndex])
                 : Configuration.GetDefaultServer();
-            _modifiedConfiguration.configs.Insert(_oldSelectedIndex < 0 ? 0 : _oldSelectedIndex + 1, server);
+            _modifiedConfiguration.servers.Insert(_oldSelectedIndex < 0 ? 0 : _oldSelectedIndex + 1, server);
             LoadConfiguration(_modifiedConfiguration);
             _SelectedID = server.id;
             ServersListBox.SelectedIndex = _oldSelectedIndex + 1;
@@ -503,15 +503,15 @@ namespace Shadowsocks.View
                 for (--i; i >= 0; --i)
                 {
                     int index = array[i];
-                    if (index >= 0 && index < _modifiedConfiguration.configs.Count)
+                    if (index >= 0 && index < _modifiedConfiguration.servers.Count)
                     {
-                        _modifiedConfiguration.configs.RemoveAt(index);
+                        _modifiedConfiguration.servers.RemoveAt(index);
                     }
                 }
             }
-            if (_oldSelectedIndex >= _modifiedConfiguration.configs.Count)
+            if (_oldSelectedIndex >= _modifiedConfiguration.servers.Count)
             {
-                _oldSelectedIndex = _modifiedConfiguration.configs.Count - 1;
+                _oldSelectedIndex = _modifiedConfiguration.servers.Count - 1;
             }
             if (_oldSelectedIndex < 0)
             {
@@ -531,7 +531,7 @@ namespace Shadowsocks.View
             {
                 return;
             }
-            if (_modifiedConfiguration.configs.Count == 0)
+            if (_modifiedConfiguration.servers.Count == 0)
             {
                 MessageBox.Show(I18N.GetString("Please add at least one server"));
                 return;
@@ -579,9 +579,9 @@ namespace Shadowsocks.View
             var items = ServersListBox.SelectedIndices;
             if (items.Count == 1)
             {
-                if (index > 0 && index < _modifiedConfiguration.configs.Count)
+                if (index > 0 && index < _modifiedConfiguration.servers.Count)
                 {
-                    _modifiedConfiguration.configs.Reverse(index - 1, 2);
+                    _modifiedConfiguration.servers.Reverse(index - 1, 2);
                     ServersListBox.ClearSelected();
                     ServersListBox.SelectedIndex = _oldSelectedIndex = index - 1;
                     LoadConfiguration(_modifiedConfiguration);
@@ -601,7 +601,7 @@ namespace Shadowsocks.View
                 }
                 foreach (int item in all_items)
                 {
-                    _modifiedConfiguration.configs.Reverse(item - 1, 2);
+                    _modifiedConfiguration.servers.Reverse(item - 1, 2);
                 }
                 _allowSave = false;
                 _ignoreLoad = true;
@@ -629,9 +629,9 @@ namespace Shadowsocks.View
             var items = ServersListBox.SelectedIndices;
             if (items.Count == 1)
             {
-                if (_oldSelectedIndex >= 0 && _oldSelectedIndex < _modifiedConfiguration.configs.Count - 1)
+                if (_oldSelectedIndex >= 0 && _oldSelectedIndex < _modifiedConfiguration.servers.Count - 1)
                 {
-                    _modifiedConfiguration.configs.Reverse(index, 2);
+                    _modifiedConfiguration.servers.Reverse(index, 2);
                     ServersListBox.ClearSelected();
                     ServersListBox.SelectedIndex = _oldSelectedIndex = index + 1;
                     LoadConfiguration(_modifiedConfiguration);
@@ -652,7 +652,7 @@ namespace Shadowsocks.View
                 }
                 foreach (int item in rev_items)
                 {
-                    _modifiedConfiguration.configs.Reverse(item, 2);
+                    _modifiedConfiguration.servers.Reverse(item, 2);
                 }
                 _allowSave = false;
                 _ignoreLoad = true;

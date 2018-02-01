@@ -69,7 +69,7 @@ namespace Shadowsocks.Model
         private long maxTransDownload = 0;
         private long maxTransUpload = 0;
         private int avgConnectTime = -1;
-        //private List<TransLog> speedLog = null;
+        private List<TransLog> speedLog = null;
         private LinkedList<ErrorLog> errList = new LinkedList<ErrorLog>();
 
         private const int avgTime = 5;

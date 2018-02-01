@@ -90,7 +90,7 @@ namespace Shadowsocks.View
             comboServers.Items.Clear();
             comboServers.Items.Add("");
             Dictionary<string, int> server_group = new Dictionary<string, int>();
-            foreach (Server s in configuration.configs)
+            foreach (Server s in configuration.servers)
             {
                 if (!string.IsNullOrEmpty(s.group) && !server_group.ContainsKey(s.group))
                 {
@@ -98,7 +98,7 @@ namespace Shadowsocks.View
                     server_group[s.group] = 1;
                 }
             }
-            foreach (Server s in configuration.configs)
+            foreach (Server s in configuration.servers)
             {
                 comboServers.Items.Add(GetDisplayText(s));
             }
@@ -192,7 +192,7 @@ namespace Shadowsocks.View
         {
             string key = ServerListText2Key((string)listPorts.SelectedItem);
             Dictionary<string, int> server_group = new Dictionary<string, int>();
-            foreach (Server s in _modifiedConfiguration.configs)
+            foreach (Server s in _modifiedConfiguration.servers)
             {
                 if (!string.IsNullOrEmpty(s.group) && !server_group.ContainsKey(s.group))
                 {
@@ -243,7 +243,7 @@ namespace Shadowsocks.View
 
         private string GetIDText(string id)
         {
-            foreach (Server s in _modifiedConfiguration.configs)
+            foreach (Server s in _modifiedConfiguration.servers)
             {
                 if (id == s.id)
                 {

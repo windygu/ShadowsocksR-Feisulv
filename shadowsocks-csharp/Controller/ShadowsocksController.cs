@@ -65,7 +65,7 @@ namespace Shadowsocks.Controller
             _config = Configuration.Load();
             _transfer = ServerTransferTotal.Load();
 
-            foreach (Server server in _config.configs)
+            foreach (Server server in _config.servers)
             {
                 if (_transfer.servers.ContainsKey(server.server))
                 {
@@ -127,9 +127,9 @@ namespace Shadowsocks.Controller
             {
                 for (int j = 0; j < servers.Count; ++j)
                 {
-                    if (FindFirstMatchServer(servers[j], mergeConfig.configs) == -1)
+                    if (FindFirstMatchServer(servers[j], mergeConfig.servers) == -1)
                     {
-                        mergeConfig.configs.Add(servers[j]);
+                        mergeConfig.servers.Add(servers[j]);
                     }
                 }
             }
@@ -142,21 +142,21 @@ namespace Shadowsocks.Controller
             {
                 for (int j = 0; j < servers.Count; ++j)
                 {
-                    int i = FindFirstMatchServer(servers[j], mergeConfig.configs);
+                    int i = FindFirstMatchServer(servers[j], mergeConfig.servers);
                     if (i != -1)
                     {
                         bool enable = servers[j].enable;
-                        servers[j].CopyServer(mergeConfig.configs[i]);
+                        servers[j].CopyServer(mergeConfig.servers[i]);
                         servers[j].enable = enable;
                     }
                 }
             }
-            for (int i = 0; i < mergeConfig.configs.Count; ++i)
+            for (int i = 0; i < mergeConfig.servers.Count; ++i)
             {
-                int j = FindFirstMatchServer(mergeConfig.configs[i], servers);
+                int j = FindFirstMatchServer(mergeConfig.servers[i], servers);
                 if (j == -1)
                 {
-                    missingServers.Add(mergeConfig.configs[i]);
+                    missingServers.Add(mergeConfig.servers[i]);
                 }
             }
             return missingServers;
@@ -167,14 +167,14 @@ namespace Shadowsocks.Controller
             Configuration ret = Configuration.Load();
             if (mergeConfig != null)
             {
-                MergeConfiguration(mergeConfig, ret.configs);
+                MergeConfiguration(mergeConfig, ret.servers);
             }
             return ret;
         }
 
         public void MergeConfiguration(Configuration mergeConfig)
         {
-            AppendConfiguration(_config, mergeConfig.configs);
+            AppendConfiguration(_config, mergeConfig.servers);
             SaveConfig(_config);
         }
 
@@ -191,7 +191,7 @@ namespace Shadowsocks.Controller
 
         public void SaveServersConfig(Configuration config)
         {
-            List<Server> missingServers = MergeConfiguration(_config, config.configs);
+            List<Server> missingServers = MergeConfiguration(_config, config.servers);
             _config.CopyFrom(config);
             foreach (Server s in missingServers)
             {
@@ -207,32 +207,36 @@ namespace Shadowsocks.Controller
             _config.FlushPortMapCache();
         }
 
-        public bool AddServerBySSURL(string ssURL, string force_group = null, bool toLast = false)
+
+        public bool GetServerFromSSRURL(string ssURL, out Server server, string force_group = null)
         {
+            server = null;
             if (Util.Utils.SSRURLIsVaild(ssURL))
             {
                 try
                 {
-                    var server = new Server(ssURL, force_group);
-                    if (toLast)
-                    {
-                        _config.configs.Add(server);
-                    }
-                    else
-                    {
-                        int index = _config.index + 1;
-                        if (index < 0 || index > _config.configs.Count)
-                            index = _config.configs.Count;
-                        _config.configs.Insert(index, server);
-                    }
-                    SaveConfig(_config);
+                    server = new Server(ssURL, force_group);
                     return true;
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Logging.LogUsefulException(e);
+                    Logging.LogUsefulException(ex);
+                    server = null;
                     return false;
                 }
+            }
+            return false;
+        }
+
+        public bool AddServerBySSURL(string ssURL, string force_group = null, bool toLast = false)
+        {
+
+            Server server;
+            if (GetServerFromSSRURL(ssURL, out server))
+            {
+                _config.servers.Add(server);
+                return true;
+
             }
             else
             {
@@ -316,7 +320,7 @@ namespace Shadowsocks.Controller
         public void ClearTransferTotal(string server_addr)
         {
             _transfer.Clear(server_addr);
-            foreach (Server server in _config.configs)
+            foreach (Server server in _config.servers)
             {
                 if (server.server == server_addr)
                 {
