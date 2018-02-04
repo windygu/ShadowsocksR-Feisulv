@@ -3,7 +3,11 @@
 Shadowsocks=Shadowsocks
 
 # Menu items
-
+Scan QRcode From Feisulv=从飞速率官网批量扫描二维码
+Update Feisulv nodes=更新飞速率节点
+Get Outside=飞到国外
+Stay Inside=回到国内
+PAC mode=智能模式(PAC)
 Mode=系統代理模式
 No modify system proxy=保持當前狀態不修改
 Disable system proxy=直連模式

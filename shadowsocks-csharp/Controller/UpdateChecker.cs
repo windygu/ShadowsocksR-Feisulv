@@ -62,6 +62,8 @@ namespace Shadowsocks.Controller
                     http.Proxy = null;
                 }
                 //UseProxy = !UseProxy;
+
+
                 http.DownloadStringCompleted += http_DownloadStringCompleted;
                 http.DownloadStringAsync(new Uri(UpdateURL + "?rnd=" + Util.Utils.RandUInt32().ToString()));
             }

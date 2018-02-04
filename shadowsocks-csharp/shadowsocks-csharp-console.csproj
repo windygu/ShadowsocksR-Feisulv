@@ -81,6 +81,8 @@
     <Compile Include="3rd\opendns\RR\SOA.cs" />
     <Compile Include="3rd\SimpleJson.cs" />
     <Compile Include="Controller\APIServer.cs" />
+    <Compile Include="Controller\Controllers.cs" />
+    <Compile Include="Controller\FeisulvController.cs" />
     <Compile Include="Controller\FileManager.cs" />
     <Compile Include="Controller\GFWListUpdater.cs" />
     <Compile Include="Controller\HttpProxy.cs" />

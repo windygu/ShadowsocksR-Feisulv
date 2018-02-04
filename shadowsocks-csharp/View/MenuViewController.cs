@@ -1,4 +1,4 @@
-﻿using Shadowsocks.Controller;
+using Shadowsocks.Controller;
 using Shadowsocks.Model;
 using Shadowsocks.Properties;
 using System;
@@ -42,6 +42,7 @@ namespace Shadowsocks.View
         //edit by sunp 20170930
         private MenuItem FlyToOutItem;
         private MenuItem CamebackChinaItem;
+        private MenuItem PACModeItem2;
 
         private MenuItem ruleBypassLan;
         private MenuItem ruleBypassChina;
@@ -86,6 +87,7 @@ namespace Shadowsocks.View
             _notifyIcon.Visible = true;
             _notifyIcon.ContextMenu = contextMenu1;
             _notifyIcon.MouseClick += notifyIcon1_Click;
+            _notifyIcon.DoubleClick += _notifyIcon_DoubleClick;
             //_notifyIcon.MouseDoubleClick += notifyIcon1_DoubleClick;
 
             updateChecker = new UpdateChecker();
@@ -107,6 +109,11 @@ namespace Shadowsocks.View
             timerDelayCheckUpdate = new System.Timers.Timer(1000.0 * 10);
             timerDelayCheckUpdate.Elapsed += timer_Elapsed;
             timerDelayCheckUpdate.Start();
+        }
+
+        private void _notifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -220,7 +227,7 @@ namespace Shadowsocks.View
         private void LoadMenu()
         {
             this.contextMenu1 = new ContextMenu(new MenuItem[] {
-                CreateMenuItem("从飞速率官网批量扫描二维码",new EventHandler(this.ScanQRCodeFrom_feisulvItem_Click)),
+                CreateMenuItem("Scan QRcode From Feisulv",new EventHandler(this.ScanQRCodeFrom_feisulvItem_Click)),
                  ServersItem = CreateMenuGroup("Choose Server", new MenuItem[] {
                     SeperatorItem = new MenuItem("-"),
                     CreateMenuItem("Edit servers...", new EventHandler(this.Config_Click)),
@@ -233,10 +240,11 @@ namespace Shadowsocks.View
                 }),
                  DebugMenu=CreateMenuGroup("DEBUG",new MenuItem[]
                  {
-                     CreateMenuItem("更新节点",new EventHandler(this.UpdateNodeFromFeisulv))
+                     CreateMenuItem("Update Feisulv nodes",new EventHandler(this.UpdateNodeFromFeisulv))
                  }),
-                FlyToOutItem = CreateMenuItem("飞到境外",new EventHandler(this.GlobalModeItem_Click)),
-                CamebackChinaItem = CreateMenuItem("回到国内",new EventHandler(this.EnableItem_Click)),
+                FlyToOutItem = CreateMenuItem("Get Outside",new EventHandler(this.GlobalModeItem_Click)),
+               PACModeItem2=CreateMenuItem("PAC mode",new EventHandler(this.PACModeItem_Click)),
+                CamebackChinaItem = CreateMenuItem("Stay Inside",new EventHandler(this.EnableItem_Click)),
 
                 otherItem= CreateMenuGroup("Others", new MenuItem[]
                 {
@@ -620,6 +628,7 @@ namespace Shadowsocks.View
 
             FlyToOutItem.Checked = config.sysProxyMode == (int)ProxyMode.Global;
             CamebackChinaItem.Checked = config.sysProxyMode == (int)ProxyMode.Direct;
+            PACModeItem2.Checked= config.sysProxyMode == (int)ProxyMode.Pac;
         }
 
         private void UpdateProxyRule(Configuration config)
