@@ -84,10 +84,6 @@ namespace Shadowsocks
 #if !_CONSOLE
                 _viewController = new MenuViewController(_controller);
 #endif
-                feisulvController = new FeisulvController(_controller);
-
-
-                Controllers.feisulvController = feisulvController;
                 Controllers.shadowsocksController = _controller;
 
 

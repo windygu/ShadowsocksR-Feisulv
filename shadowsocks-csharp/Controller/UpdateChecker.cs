@@ -24,7 +24,7 @@ namespace Shadowsocks.Controller
         public Version CurrentVersion;
         public const string Name = "ShadowsocksR";
         public const string Copyright = "Copyright © BreakWa11 2017. Fork from Shadowsocks by clowwindy";
-        public const string currentVersionNum = "4.7.0";
+        public const string currentVersionNum = "4.7.1";
         public enum OnNewVersionFondAction
         {
             shutdown = -1,

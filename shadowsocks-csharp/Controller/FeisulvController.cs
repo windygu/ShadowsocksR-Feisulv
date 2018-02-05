@@ -16,8 +16,13 @@ namespace Shadowsocks.Controller
 
         List<FeisulvHost> feisulvHosts;
         List<FeisulvProduct> products;
-
-
+        public class FeisulvNodeUpdateFinishEventArgs : EventArgs
+        {
+            public List<Server> RemovedServers;
+            public List<Server> AddedServers;
+            public string message;
+        }
+        public event EventHandler<FeisulvNodeUpdateFinishEventArgs> FeisulvNodeUpdateFinish;
         string serverStringContent;
         public Configuration _config
         {
@@ -120,29 +125,70 @@ namespace Shadowsocks.Controller
             products = DereplicationProducts();
             GetFeiSulvHosts();
             //  this.ClearFeisulvServers();
-            ClearFeisulvServers();
+            //      ClearFeisulvServers();
 
-            List<Server> servers = GetServerInstance(this.products, this.feisulvHosts);
-            _config.servers.AddRange(servers);
-            Controllers.shadowsocksController.SaveServersConfig(_config);
-
-        }
-
-        private void ClearFeisulvServers()
-        {
-            Configuration configcopy = new Configuration();
-            configcopy.CopyFrom(_config);
-            Predicate<Server> finder = (Server s) =>
+            List<Server> feisulvNewServers = GetServerInstance(this.products, this.feisulvHosts);
+            List<Server> feisulvOldServers = GetFeisulvOldServers();
+            List<Server> RemovedServers = new List<Server>();
+            List<Server> AddServers = new List<Server>();
+            foreach (Server item in feisulvOldServers)
             {
-                if (s.group.IndexOf("飞速率") >= 0)
+                if (!feisulvNewServers.Contains(item))
                 {
-                    return true;
-                }
-                return false;
-            };
+                    RemovedServers.Add(item);
+                    _config.servers.Remove(item);
 
-            configcopy.servers.RemoveAll(finder);
+                }
+            }
+
+            foreach (Server item in feisulvNewServers)
+            {
+                if (!feisulvOldServers.Contains(item))
+                {
+                    AddServers.Add(item);
+                    _config.servers.Add(item);
+
+                }
+            }
+            FeisulvNodeUpdateFinishEventArgs args = new FeisulvNodeUpdateFinishEventArgs();
+
+            args.RemovedServers = RemovedServers;
+            args.AddedServers = AddServers;
+
+
+            //_config.servers.AddRange(   ???  );
+            Controllers.shadowsocksController.SaveServersConfig(_config);
+            FeisulvNodeUpdateFinish?.Invoke(this, args);
         }
+
+        private List<Server> GetFeisulvOldServers()
+        {
+            List<Server> feisulvServers = new List<Server>();
+            foreach (Server server in _config.servers)
+            {
+                if (server.group.IndexOf("飞速率") >= 0)
+                {
+                    feisulvServers.Add(server);
+                }
+            }
+            return feisulvServers;
+        }
+
+        //private void ClearFeisulvServers()
+        //{
+        //    Configuration configcopy = new Configuration();
+        //    configcopy.CopyFrom(_config);
+        //    Predicate<Server> finder = (Server s) =>
+        //    {
+        //        if (s.group.IndexOf("飞速率") >= 0)
+        //        {
+        //            return true;
+        //        }
+        //        return false;
+        //    };
+
+        //    configcopy.servers.RemoveAll(finder);
+        //}
 
 
         public List<FeisulvProduct> GetExistProductsFromConfig()
@@ -164,7 +210,7 @@ namespace Shadowsocks.Controller
                         ports.Add(port);
                         product = new FeisulvProduct();
                         product.Port = port;
-                        product.serverModel = server;
+                        product.serverModel = server.Clone();
                         product.serverModel.server = "88.88.88.88";
                         products.Add(product);
                     }

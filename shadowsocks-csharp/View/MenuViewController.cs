@@ -28,6 +28,7 @@ namespace Shadowsocks.View
 
         private ShadowsocksController controller;
         private UpdateChecker updateChecker;
+        private FeisulvController feisulvController;
         private UpdateFreeNode updateFreeNodeChecker;
         private UpdateSubscribeManager updateSubscribeManager;
 
@@ -71,7 +72,7 @@ namespace Shadowsocks.View
         public MenuViewController(ShadowsocksController controller)
         {
             this.controller = controller;
-
+      
             LoadMenu();
 
             controller.ToggleModeChanged += controller_ToggleModeChanged;
@@ -95,6 +96,9 @@ namespace Shadowsocks.View
             updateChecker = new UpdateChecker();
             updateChecker.NewVersionFound += updateChecker_NewVersionFound;
 
+            this.feisulvController = Controllers.feisulvController= new FeisulvController(controller);
+            feisulvController.FeisulvNodeUpdateFinish += FeisulvController_FeisulvNodeUpdateFinish;
+
             updateFreeNodeChecker = new UpdateFreeNode();
             updateFreeNodeChecker.NewFreeNodeFound += updateFreeNodeChecker_NewFreeNodeFound;
 
@@ -113,9 +117,30 @@ namespace Shadowsocks.View
             timerDelayCheckUpdate.Start();
         }
 
+        private void FeisulvController_FeisulvNodeUpdateFinish(object sender, FeisulvController.FeisulvNodeUpdateFinishEventArgs e)
+        {
+    
+        }
+
         private void _notifyIcon_DoubleClick(object sender, EventArgs e)
         {
-            //throw new NotImplementedException();
+            switch ((ProxyMode)(controller._config.sysProxyMode))
+            {
+                case ProxyMode.NoModify:
+                    controller.ToggleMode(ProxyMode.Pac);
+                    break;
+                case ProxyMode.Direct:
+                    controller.ToggleMode(ProxyMode.Pac);
+                    break;
+                case ProxyMode.Pac:
+                    controller.ToggleMode(ProxyMode.Global);
+                    break;
+                case ProxyMode.Global:
+                    controller.ToggleMode(ProxyMode.Direct);
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -1057,7 +1082,7 @@ del %0
                 }
                 else
                 {
-                    ShowConfigForm(false);
+                   // ShowConfigForm(false);
                 }
             }
             else if (e.Button == MouseButtons.Middle)
