@@ -51,7 +51,7 @@ namespace Shadowsocks.Controller
             foreach (var rec in contents)
             {
                 string[] recs = rec.Split('|');
-                FeisulvHost temp = new FeisulvHost(recs[1], recs[2]);
+                FeisulvHost temp = new FeisulvHost(recs[1].Replace("\n","").Replace("\r",""), recs[2].Replace("\n", "").Replace("\r", ""));
                 feisulvHosts.Add(temp);
             }
         }

@@ -249,3 +249,7 @@ Password NOT match=密码不匹配
 Update subscribe SSR node success=SSR服务器订阅更新成功
 Update subscribe SSR node failure=SSR服务器订阅更新失败
 Success=成功
+Feisulv Node Updated=飞速率节点更新成功
+Removed=下线
+Added=上线
+

@@ -72,7 +72,7 @@ namespace Shadowsocks.View
         public MenuViewController(ShadowsocksController controller)
         {
             this.controller = controller;
-      
+
             LoadMenu();
 
             controller.ToggleModeChanged += controller_ToggleModeChanged;
@@ -96,7 +96,7 @@ namespace Shadowsocks.View
             updateChecker = new UpdateChecker();
             updateChecker.NewVersionFound += updateChecker_NewVersionFound;
 
-            this.feisulvController = Controllers.feisulvController= new FeisulvController(controller);
+            this.feisulvController = Controllers.feisulvController = new FeisulvController(controller);
             feisulvController.FeisulvNodeUpdateFinish += FeisulvController_FeisulvNodeUpdateFinish;
 
             updateFreeNodeChecker = new UpdateFreeNode();
@@ -117,9 +117,33 @@ namespace Shadowsocks.View
             timerDelayCheckUpdate.Start();
         }
 
+
+
+
         private void FeisulvController_FeisulvNodeUpdateFinish(object sender, FeisulvController.FeisulvNodeUpdateFinishEventArgs e)
         {
-    
+            if (e.AddedServers.Count != 0 || e.RemovedServers.Count != 0)
+            {
+                string result = "";
+                if (e.AddedServers.Count != 0)
+                {
+                    result += I18N.GetString("Added");
+                    foreach (Server item in e.AddedServers)
+                    {
+                        result += item.remarks + ",";
+                    }
+                    result += '\n';
+                }
+                if (e.RemovedServers.Count != 0)
+                {
+                    result += I18N.GetString("Removed");
+                    foreach (Server item in e.RemovedServers)
+                    {
+                        result += item.remarks + ",";
+                    }
+                }
+                ShowBalloonTip(I18N.GetString("Feisulv Node Updated"), result, ToolTipIcon.Info, 1000);
+            }
         }
 
         private void _notifyIcon_DoubleClick(object sender, EventArgs e)
@@ -147,6 +171,7 @@ namespace Shadowsocks.View
         {
             if (timerDelayCheckUpdate != null)
             {
+                feisulvController.FeisulvNodeUpdate();
                 timerDelayCheckUpdate.Interval = 1000.0 * 60 * 60 * 2;
                 updateChecker.CheckUpdate(controller.GetCurrentConfiguration());
             }
@@ -270,7 +295,7 @@ namespace Shadowsocks.View
                     CreateMenuItem("Server statistic...", new EventHandler(this.ShowServerLogItem_Click)),
                     CreateMenuItem("Disconnect current", new EventHandler(this.DisconnectCurrent_Click)),
                 }),
-  
+
                 FlyToOutItem = CreateMenuItem("Get Outside",new EventHandler(this.GlobalModeItem_Click)),
                PACModeItem2=CreateMenuItem("PAC mode",new EventHandler(this.PACModeItem_Click)),
                 CamebackChinaItem = CreateMenuItem("Stay Inside",new EventHandler(this.EnableItem_Click)),
@@ -1082,7 +1107,7 @@ del %0
                 }
                 else
                 {
-                   // ShowConfigForm(false);
+                    // ShowConfigForm(false);
                 }
             }
             else if (e.Button == MouseButtons.Middle)

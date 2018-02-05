@@ -181,8 +181,8 @@ namespace Shadowsocks.View
 
             OKButton.Text = I18N.GetString("OK");
             MyCancelButton.Text = I18N.GetString("Cancel");
-            LinkUpdate.MaximumSize = new Size(ServersListBox.Width, ServersListBox.Height);
-            LinkUpdate.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
+         //   LinkUpdate.MaximumSize = new Size(ServersListBox.Width, ServersListBox.Height);
+            //LinkUpdate.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
         }
 
         private void controller_ConfigChanged(object sender, EventArgs e)
