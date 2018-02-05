@@ -13,14 +13,27 @@ namespace Shadowsocks.Controller
 {
     public class UpdateChecker
     {
-      //  private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
+        //  private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
         private const string UpdateURL = "http://tools.moonkop.com/upload/ssr/versions/versionList.xml";
         public Version LatestVersion;
-        public event EventHandler NewVersionFound;
+        public event EventHandler<NewVersionFoundEventArgs> NewVersionFound;
+        public class NewVersionFoundEventArgs:EventArgs
+        {
+            public OnNewVersionFondAction action;
+        }
         public Version CurrentVersion;
         public const string Name = "ShadowsocksR";
         public const string Copyright = "Copyright © BreakWa11 2017. Fork from Shadowsocks by clowwindy";
         public const string currentVersionNum = "4.7.0";
+        public enum OnNewVersionFondAction
+        {
+            shutdown = -1,
+            nothing = 0,
+            alert = 1,
+            slient = 2
+        }
+
+
 #if !_DOTNET_4_0
         public const string NetVer = "2.0";
 #elif !_CONSOLE
@@ -170,9 +183,9 @@ namespace Shadowsocks.Controller
             try
             {
                 doc = new XmlDocument();
-                doc.LoadXml(e.Result.Replace("\n",""));
+                doc.LoadXml(e.Result.Replace("\n", ""));
                 XmlNodeList elelist = doc.GetElementsByTagName("version");
-               versionDict = new Dictionary<string, Version>();
+                versionDict = new Dictionary<string, Version>();
                 foreach (System.Xml.XmlNode item in elelist)
                 {
                     Version versionItem = new Version();
@@ -181,22 +194,37 @@ namespace Shadowsocks.Controller
                     versionItem.state = (Version.State)Enum.Parse(typeof(Version.State), item["state"].InnerText);
                     versionDict.Add(versionItem.versionNum, versionItem);
                 }
-     
+                foreach (var version in versionDict)
+                {
+                    if (version.Value.state == preferVersion)
+                    {
+                        this.LatestVersion = version.Value;
+                        break;
+                    }
+                }
+                NewVersionFoundEventArgs args = new NewVersionFoundEventArgs();
+
                 switch (versionDict[currentVersionNum].state)
                 {
                     case Version.State.banned:
-                        Application.Exit();
+                        args.action = OnNewVersionFondAction.shutdown;
+                        break;
+                    case Version.State.deprecated:
+                        args.action = OnNewVersionFondAction.slient;
                         break;
                     case Version.State.outdated:
-                        VersionOutdated();
+                        args.action =  OnNewVersionFondAction.alert;
                         break;
                     case Version.State.stable:
+                        return;
                         break;
                     case Version.State.beta:
+                        return;
                         break;
                     default:
                         break;
                 }
+                NewVersionFound(this,args);
             }
             catch (Exception ex)
             {
@@ -211,23 +239,16 @@ namespace Shadowsocks.Controller
 
         private void VersionOutdated()
         {
-            foreach (var version in versionDict)
-            {
-                if (version.Value.state == preferVersion)
-                {
-                    this.LatestVersion = version.Value;
-                    NewVersionFound(this, null);
-                    break;
-                }
-            }
+            
         }
 
         public class Version
         {
             public enum State
             {
-                banned = -2,
+                banned = -3,
                 outdated = -1,
+                deprecated=-2,
                 stable = 0,
                 beta = 1
             }

@@ -122,16 +122,10 @@ namespace Shadowsocks.View
         {
             if (timerDelayCheckUpdate != null)
             {
-                if (timerDelayCheckUpdate.Interval <= 1000.0 * 30)
-                {
-                    timerDelayCheckUpdate.Interval = 1000.0 * 60 * 5;
-                }
-                else
-                {
-                    timerDelayCheckUpdate.Interval = 1000.0 * 60 * 60 * 2;
-                }
+                timerDelayCheckUpdate.Interval = 1000.0 * 60 * 60 * 2;
+                updateChecker.CheckUpdate(controller.GetCurrentConfiguration());
             }
-            updateChecker.CheckUpdate(controller.GetCurrentConfiguration());
+
         }
 
         void controller_Errored(object sender, System.IO.ErrorEventArgs e)
@@ -229,7 +223,18 @@ namespace Shadowsocks.View
         private void LoadMenu()
         {
             this.contextMenu1 = new ContextMenu(new MenuItem[] {
+                CreateMenuGroup("Feisulv",new MenuItem[]
+                {
                 CreateMenuItem("Scan QRcode From Feisulv",new EventHandler(this.ScanQRCodeFrom_feisulvItem_Click)),
+                     CreateMenuItem("Update Feisulv nodes",new EventHandler(this.UpdateNodeFromFeisulv)),
+                     CreateMenuItem("Visit Feisulv",new EventHandler(this.UpdateNodeFromFeisulv)),
+                     CreateMenuItem("User guidence",new EventHandler(this.UpdateNodeFromFeisulv)),
+                        CreateMenuItem("Check update", new EventHandler(this.CheckUpdate_Click)),
+                }
+
+                ),
+
+
                  ServersItem = CreateMenuGroup("Choose Server", new MenuItem[] {
                     SeperatorItem = new MenuItem("-"),
                     CreateMenuItem("Edit servers...", new EventHandler(this.Config_Click)),
@@ -240,10 +245,7 @@ namespace Shadowsocks.View
                     CreateMenuItem("Server statistic...", new EventHandler(this.ShowServerLogItem_Click)),
                     CreateMenuItem("Disconnect current", new EventHandler(this.DisconnectCurrent_Click)),
                 }),
-                 DebugMenu=CreateMenuGroup("DEBUG",new MenuItem[]
-                 {
-                     CreateMenuItem("Update Feisulv nodes",new EventHandler(this.UpdateNodeFromFeisulv))
-                 }),
+  
                 FlyToOutItem = CreateMenuItem("Get Outside",new EventHandler(this.GlobalModeItem_Click)),
                PACModeItem2=CreateMenuItem("PAC mode",new EventHandler(this.PACModeItem_Click)),
                 CamebackChinaItem = CreateMenuItem("Stay Inside",new EventHandler(this.EnableItem_Click)),
@@ -587,27 +589,35 @@ namespace Shadowsocks.View
             }
         }
 
-        void updateChecker_NewVersionFound(object sender, EventArgs e)
+        void updateChecker_NewVersionFound(object sender, UpdateChecker.NewVersionFoundEventArgs e)
         {
-            if (updateChecker.LatestVersion == null)
-            {
-                Logging.Log(LogLevel.Error, "connect to update server error");
-            }
-            else
-            {
-                if (!this.UpdateItem.Visible)
-                {
-                    ShowBalloonTip(String.Format(I18N.GetString("{0} {1} Update Found"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum),
-                        I18N.GetString("Click menu to download"), ToolTipIcon.Info, 10000);
-                    _notifyIcon.BalloonTipClicked += notifyIcon1_BalloonTipClicked;
 
-                    timerDelayCheckUpdate.Elapsed -= timer_Elapsed;
-                    timerDelayCheckUpdate.Stop();
-                    timerDelayCheckUpdate = null;
-                }
-                this.UpdateItem.Visible = true;
-                this.UpdateItem.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
+            switch (e.action)
+            {
+                case UpdateChecker.OnNewVersionFondAction.shutdown:
+                    Application.Exit();
+                    break;
+                case UpdateChecker.OnNewVersionFondAction.nothing:
+                    break;
+                case UpdateChecker.OnNewVersionFondAction.alert:
+                    if (!this.UpdateItem.Visible)
+                    {
+                        ShowBalloonTip(String.Format(I18N.GetString("{0} {1} Update Found"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum),
+                            I18N.GetString("Click menu to download"), ToolTipIcon.Info, 10000);
+                        _notifyIcon.BalloonTipClicked += notifyIcon1_BalloonTipClicked;
+                    }
+                    this.UpdateItem.Visible = true;
+                    this.UpdateItem.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
+                    break;
+                case UpdateChecker.OnNewVersionFondAction.slient:
+                    DownloadNewVersion(updateChecker.LatestVersion.url);
+                    break;
+                default:
+                    break;
             }
+            timerDelayCheckUpdate.Elapsed -= timer_Elapsed;
+            timerDelayCheckUpdate.Stop();
+            timerDelayCheckUpdate = null;
         }
 
         void UpdateItem_Clicked(object sender, EventArgs e)
@@ -621,7 +631,7 @@ namespace Shadowsocks.View
             WebClient http = new WebClient();
             http.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.3319.102 Safari/537.36");
             http.DownloadFileCompleted += Http_DownloadFileCompleted;
-             CurrentFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+            CurrentFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
             LastVersionFileName = CurrentFileName + ".newversion";
             http.DownloadFileAsync(new Uri(url), LastVersionFileName);
 
@@ -629,7 +639,11 @@ namespace Shadowsocks.View
 
         private void Http_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
-       
+            if (e.Error != null)
+            {
+                return;
+
+            }
             controller.Stop();
             FileStream fs = File.Create("update.bat", 1000, FileOptions.None);
             StreamWriter sw = new StreamWriter(fs);
@@ -648,7 +662,10 @@ del %0
             Process proc = new Process();
             proc.StartInfo.FileName = "update.bat";
             proc.StartInfo.Arguments = CurrentFileName + " " + LastVersionFileName;
+            proc.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.CreateNoWindow = true;
+
             proc.Start();
         }
 
