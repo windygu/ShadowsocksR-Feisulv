@@ -250,20 +250,14 @@ namespace Shadowsocks.Controller
         {
             _config.sysProxyMode = (int)mode;
             SaveConfig(_config);
-            if (ToggleModeChanged != null)
-            {
-                ToggleModeChanged(this, new EventArgs());
-            }
+            ToggleModeChanged?.Invoke(this, new EventArgs());
         }
 
         public void ToggleRuleMode(int mode)
         {
             _config.proxyRuleMode = mode;
             SaveConfig(_config);
-            if (ToggleRuleModeChanged != null)
-            {
-                ToggleRuleModeChanged(this, new EventArgs());
-            }
+            ToggleRuleModeChanged?.Invoke(this, new EventArgs());
         }
 
         public void ToggleSelectRandom(bool enabled)
@@ -300,10 +294,9 @@ namespace Shadowsocks.Controller
                 }
                 _port_map_listener = null;
             }
-            if (_listener != null)
-            {
-                _listener.Stop();
-            }
+        
+                _listener?.Stop();
+          
 #if !_CONSOLE
             if (polipoRunner != null)
             {
@@ -335,10 +328,7 @@ namespace Shadowsocks.Controller
         public void TouchPACFile()
         {
             string pacFilename = _pacServer.TouchPACFile();
-            if (PACFileReadyToOpen != null)
-            {
-                PACFileReadyToOpen(this, new PathEventArgs() { Path = pacFilename });
-            }
+            PACFileReadyToOpen?.Invoke(this, new PathEventArgs() { Path = pacFilename });
         }
 
         public void TouchUserRuleFile()

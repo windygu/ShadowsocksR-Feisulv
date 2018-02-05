@@ -15,6 +15,8 @@ using ZXing.Common;
 using ZXing.QrCode;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.Net;
+using System.ComponentModel;
 
 namespace Shadowsocks.View
 {
@@ -113,7 +115,7 @@ namespace Shadowsocks.View
 
         private void _notifyIcon_DoubleClick(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         private void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -587,7 +589,7 @@ namespace Shadowsocks.View
 
         void updateChecker_NewVersionFound(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(updateChecker.LatestVersionNumber))
+            if (updateChecker.LatestVersion == null)
             {
                 Logging.Log(LogLevel.Error, "connect to update server error");
             }
@@ -595,7 +597,7 @@ namespace Shadowsocks.View
             {
                 if (!this.UpdateItem.Visible)
                 {
-                    ShowBalloonTip(String.Format(I18N.GetString("{0} {1} Update Found"), UpdateChecker.Name, updateChecker.LatestVersionNumber),
+                    ShowBalloonTip(String.Format(I18N.GetString("{0} {1} Update Found"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum),
                         I18N.GetString("Click menu to download"), ToolTipIcon.Info, 10000);
                     _notifyIcon.BalloonTipClicked += notifyIcon1_BalloonTipClicked;
 
@@ -604,18 +606,56 @@ namespace Shadowsocks.View
                     timerDelayCheckUpdate = null;
                 }
                 this.UpdateItem.Visible = true;
-                this.UpdateItem.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersionNumber);
+                this.UpdateItem.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
             }
         }
 
         void UpdateItem_Clicked(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(updateChecker.LatestVersionURL);
+            DownloadNewVersion(updateChecker.LatestVersion.url);
+        }
+        string CurrentFileName;
+        string LastVersionFileName;
+        void DownloadNewVersion(string url)
+        {
+            WebClient http = new WebClient();
+            http.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.3319.102 Safari/537.36");
+            http.DownloadFileCompleted += Http_DownloadFileCompleted;
+             CurrentFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+            LastVersionFileName = CurrentFileName + ".newversion";
+            http.DownloadFileAsync(new Uri(url), LastVersionFileName);
+
+        }
+
+        private void Http_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+       
+            controller.Stop();
+            FileStream fs = File.Create("update.bat", 1000, FileOptions.None);
+            StreamWriter sw = new StreamWriter(fs);
+            sw.Write(
+                @"
+del -f -q shadowsocksR.exe.old
+ren %1 shadowsocksR.exe.old
+taskkill -f -im %1
+del -f -q shadowsocksR.exe.old
+rename %2 %1
+start %1
+del %0
+");
+            sw.Close();
+            fs.Close();
+            Process proc = new Process();
+            proc.StartInfo.FileName = "update.bat";
+            proc.StartInfo.Arguments = CurrentFileName + " " + LastVersionFileName;
+            proc.StartInfo.UseShellExecute = false;
+            proc.Start();
         }
 
         void notifyIcon1_BalloonTipClicked(object sender, EventArgs e)
         {
-            //System.Diagnostics.Process.Start(updateChecker.LatestVersionURL);
+            DownloadNewVersion(updateChecker.LatestVersion.url);
+
             _notifyIcon.BalloonTipClicked -= notifyIcon1_BalloonTipClicked;
         }
 
@@ -628,7 +668,7 @@ namespace Shadowsocks.View
 
             FlyToOutItem.Checked = config.sysProxyMode == (int)ProxyMode.Global;
             CamebackChinaItem.Checked = config.sysProxyMode == (int)ProxyMode.Direct;
-            PACModeItem2.Checked= config.sysProxyMode == (int)ProxyMode.Pac;
+            PACModeItem2.Checked = config.sysProxyMode == (int)ProxyMode.Pac;
         }
 
         private void UpdateProxyRule(Configuration config)

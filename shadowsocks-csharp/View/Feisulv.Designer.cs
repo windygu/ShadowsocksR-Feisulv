@@ -103,6 +103,7 @@
             this.Controls.Add(this.textBox1);
             this.Name = "Feisulv";
             this.Text = "Feisulv";
+            this.Load += new System.EventHandler(this.Feisulv_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

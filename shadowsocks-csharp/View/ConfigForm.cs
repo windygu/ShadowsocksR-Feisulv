@@ -43,7 +43,7 @@ namespace Shadowsocks.View
             this.Icon = Icon.FromHandle(Resources.ssw128.GetHicon());
             this.controller = controller;
             this.updateChecker = updateChecker;
-            if (updateChecker.LatestVersionURL == null)
+            if (updateChecker.LatestVersion == null)
                 LinkUpdate.Visible = false;
 
             foreach (string name in EncryptorFactory.GetEncryptor())
@@ -182,7 +182,7 @@ namespace Shadowsocks.View
             OKButton.Text = I18N.GetString("OK");
             MyCancelButton.Text = I18N.GetString("Cancel");
             LinkUpdate.MaximumSize = new Size(ServersListBox.Width, ServersListBox.Height);
-            LinkUpdate.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersionNumber);
+            LinkUpdate.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
         }
 
         private void controller_ConfigChanged(object sender, EventArgs e)
@@ -693,7 +693,7 @@ namespace Shadowsocks.View
 
         private void LinkUpdate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start(updateChecker.LatestVersionURL);
+            //System.Diagnostics.Process.Start(updateChecker.LatestVersionURL);
         }
 
         private void PasswordLabel_CheckedChanged(object sender, EventArgs e)

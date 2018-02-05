@@ -15,5 +15,10 @@ namespace Shadowsocks.View
         {
             InitializeComponent();
         }
+
+        private void Feisulv_Load(object sender, EventArgs e)
+        {
+ 
+        }
     }
 }

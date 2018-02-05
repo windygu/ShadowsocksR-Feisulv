@@ -13,15 +13,14 @@ namespace Shadowsocks.Controller
 {
     public class UpdateChecker
     {
-        private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
-
-        public string LatestVersionNumber;
-        public string LatestVersionURL;
+      //  private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
+        private const string UpdateURL = "http://tools.moonkop.com/upload/ssr/versions/versionList.xml";
+        public Version LatestVersion;
         public event EventHandler NewVersionFound;
-
+        public Version CurrentVersion;
         public const string Name = "ShadowsocksR";
         public const string Copyright = "Copyright © BreakWa11 2017. Fork from Shadowsocks by clowwindy";
-        public const string Version = "4.7.0";
+        public const string currentVersionNum = "4.7.0";
 #if !_DOTNET_4_0
         public const string NetVer = "2.0";
 #elif !_CONSOLE
@@ -29,7 +28,7 @@ namespace Shadowsocks.Controller
 #else
         public const string NetVer = "";
 #endif
-        public const string FullVersion = Version +
+        public const string FullVersion = currentVersionNum +
 #if DEBUG
         " Debug";
 #else
@@ -41,6 +40,8 @@ namespace Shadowsocks.Controller
 #endif
 
         private static bool UseProxy = true;
+        private XmlDocument doc;
+        private Version.State preferVersion;
 
         public void CheckUpdate(Configuration config)
         {
@@ -89,114 +90,112 @@ namespace Shadowsocks.Controller
             return 0;
         }
 
-        public class VersionComparer : IComparer<string>
-        {
-            // Calls CaseInsensitiveComparer.Compare with the parameters reversed. 
-            public int Compare(string x, string y)
-            {
-                return CompareVersion(ParseVersionFromURL(x), ParseVersionFromURL(y));
-            }
+        //public class VersionComparer : IComparer<string>
+        //{
+        //    // Calls CaseInsensitiveComparer.Compare with the parameters reversed. 
+        //    public int Compare(string x, string y)
+        //    {
+        //        return CompareVersion(ParseVersionFromURL(x), ParseVersionFromURL(y));
+        //    }
 
-        }
+        //}
 
-        private static string ParseVersionFromURL(string url)
-        {
-            Match match = Regex.Match(url, @".*" + Name + @"-win.*?-([\d\.]+)\.\w+", RegexOptions.IgnoreCase);
-            if (match.Success)
-            {
-                if (match.Groups.Count == 2)
-                {
-                    return match.Groups[1].Value;
-                }
-            }
-            return null;
-        }
+        //private static string ParseVersionFromURL(string url)
+        //{
+        //    Match match = Regex.Match(url, @".*" + Name + @"-win.*?-([\d\.]+)\.\w+", RegexOptions.IgnoreCase);
+        //    if (match.Success)
+        //    {
+        //        if (match.Groups.Count == 2)
+        //        {
+        //            return match.Groups[1].Value;
+        //        }
+        //    }
+        //    return null;
+        //}
 
-        private void SortVersions(List<string> versions)
-        {
-            versions.Sort(new VersionComparer());
-        }
+        //private void SortVersions(List<string> versions)
+        //{
+        //    versions.Sort(new VersionComparer());
+        //}
 
-        private bool IsNewVersion(string url)
-        {
-            if (url.IndexOf("prerelease") >= 0)
-            {
-                return false;
-            }
-            // check dotnet 4.0
-            AssemblyName[] references = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
-            Version dotNetVersion = Environment.Version;
-            foreach (AssemblyName reference in references)
-            {
-                if (reference.Name == "mscorlib")
-                {
-                    dotNetVersion = reference.Version;
-                }
-            }
-            if (dotNetVersion.Major >= 4)
-            {
-                if (url.IndexOf("dotnet4.0") < 0)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (url.IndexOf("dotnet4.0") >= 0)
-                {
-                    return false;
-                }
-            }
-            string version = ParseVersionFromURL(url);
-            if (version == null)
-            {
-                return false;
-            }
-            string currentVersion = Version;
+        //private bool IsNewVersion(string url)
+        //{
+        //    if (url.IndexOf("prerelease") >= 0)
+        //    {
+        //        return false;
+        //    }
+        //    // check dotnet 4.0
+        //    AssemblyName[] references = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+        //    System.Version dotNetVersion = Environment.Version;
 
-            if (url.IndexOf("banned") > 0 && CompareVersion(version, currentVersion) == 0
-                || url.IndexOf("deprecated") > 0 && CompareVersion(version, currentVersion) > 0)
-            {
-                Application.Exit();
-                return false;
-            }
-            return CompareVersion(version, currentVersion) > 0;
-        }
+        //    foreach (AssemblyName reference in references)
+        //    {
+        //        if (reference.Name == "mscorlib")
+        //        {
+        //            dotNetVersion = reference.Version;
+        //        }
+        //    }
+        //    if (dotNetVersion.Major >= 4)
+        //    {
+        //        if (url.IndexOf("dotnet4.0") < 0)
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (url.IndexOf("dotnet4.0") >= 0)
+        //        {
+        //            return false;
+        //        }
+        //    }
+        //    string version = ParseVersionFromURL(url);
+        //    if (version == null)
+        //    {
+        //        return false;
+        //    }
+        //    string currentVersion = CurrentVersion;
 
+        //    if (url.IndexOf("banned") > 0 && CompareVersion(version, currentVersion) == 0
+        //        || url.IndexOf("deprecated") > 0 && CompareVersion(version, currentVersion) > 0)
+        //    {
+        //        Application.Exit();
+        //        return false;
+        //    }
+        //    return CompareVersion(version, currentVersion) > 0;
+        //}
+        Dictionary<string, Version> versionDict;
         private void http_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             try
             {
-                string response = e.Result;
-
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.LoadXml(response);
-                XmlNodeList elements = xmlDoc.GetElementsByTagName("media:content");
-                List<string> versions = new List<string>();
-                foreach (XmlNode el in elements)
+                doc = new XmlDocument();
+                doc.LoadXml(e.Result.Replace("\n",""));
+                XmlNodeList elelist = doc.GetElementsByTagName("version");
+               versionDict = new Dictionary<string, Version>();
+                foreach (System.Xml.XmlNode item in elelist)
                 {
-                    foreach (XmlAttribute attr in el.Attributes)
-                    {
-                        if (attr.Name == "url")
-                        {
-                            if (IsNewVersion(attr.Value))
-                            {
-                                versions.Add(attr.Value);
-                            }
-                        }
-                    }
+                    Version versionItem = new Version();
+                    versionItem.versionNum = item["versionNum"].InnerText;
+                    versionItem.url = item["url"].InnerText;
+                    versionItem.state = (Version.State)Enum.Parse(typeof(Version.State), item["state"].InnerText);
+                    versionDict.Add(versionItem.versionNum, versionItem);
                 }
-                if (versions.Count == 0)
+     
+                switch (versionDict[currentVersionNum].state)
                 {
-                    return;
-                }
-                // sort versions
-                SortVersions(versions);
-                LatestVersionURL = versions[versions.Count - 1];
-                LatestVersionNumber = ParseVersionFromURL(LatestVersionURL);
-                if (NewVersionFound != null)
-                {
-                    NewVersionFound(this, new EventArgs());
+                    case Version.State.banned:
+                        Application.Exit();
+                        break;
+                    case Version.State.outdated:
+                        VersionOutdated();
+                        break;
+                    case Version.State.stable:
+                        break;
+                    case Version.State.beta:
+                        break;
+                    default:
+                        break;
                 }
             }
             catch (Exception ex)
@@ -206,12 +205,45 @@ namespace Shadowsocks.Controller
                     Logging.Debug(e.Error.ToString());
                 }
                 Logging.Debug(ex.ToString());
-                if (NewVersionFound != null)
-                {
-                    NewVersionFound(this, new EventArgs());
-                }
                 return;
             }
         }
+
+        private void VersionOutdated()
+        {
+            foreach (var version in versionDict)
+            {
+                if (version.Value.state == preferVersion)
+                {
+                    this.LatestVersion = version.Value;
+                    NewVersionFound(this, null);
+                    break;
+                }
+            }
+        }
+
+        public class Version
+        {
+            public enum State
+            {
+                banned = -2,
+                outdated = -1,
+                stable = 0,
+                beta = 1
+            }
+            public State state;
+            public string versionNum;
+            public string url;
+            public override string ToString()
+            {
+                string str = "version:" + versionNum;
+                str += "\r\n" + "url:" + url;
+                str += "\r\n" + "state:" + state.ToString();
+                return str;
+
+            }
+        }
+
     }
+
 }
