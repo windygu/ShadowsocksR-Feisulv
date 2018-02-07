@@ -14,12 +14,12 @@ namespace Shadowsocks.Controller
     public class UpdateChecker
     {
         //  private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
-        private const string UpdateURL = "http://tools.moonkop.com/upload/ssr/versions/versionList.xml";
+        private const string UpdateURL = "http://update.qwssr.com/ssr/versionList.xml";
         public Version LatestVersion;
         public event EventHandler<NewVersionFoundEventArgs> VersionGetHandler;
         public class NewVersionFoundEventArgs : EventArgs
         {
-            public OnNewVersionFondAction action;
+            public OnNewVersionFondAction action=OnNewVersionFondAction.nothing;
         }
         private Version currentVersion;
 
@@ -41,7 +41,7 @@ namespace Shadowsocks.Controller
         }
         public const string Name = "ShadowsocksR";
         public const string Copyright = "Copyright © BreakWa11 2017. Fork from Shadowsocks by clowwindy";
-        public const string currentVersionNum = "4.7.3";
+        public const string currentVersionNum = "4.7.4";
         public bool forceUpdate = false;
 
 
@@ -228,25 +228,26 @@ namespace Shadowsocks.Controller
                 }
                 NewVersionFoundEventArgs args = new NewVersionFoundEventArgs();
 
-                switch (versionDict[currentVersionNum].state)
+                if (versionDict.ContainsKey(currentVersionNum))
                 {
-                    case Version.State.banned:
-                        args.action = OnNewVersionFondAction.shutdown;
-                        break;
-                    case Version.State.deprecated:
-                        args.action = OnNewVersionFondAction.slient;
-                        break;
-                    case Version.State.outdated:
-                        args.action = OnNewVersionFondAction.alert;
-                        break;
-                    case Version.State.stable:
-                        args.action = OnNewVersionFondAction.nothing;
-                        break;
-                    case Version.State.beta:
-                        args.action = OnNewVersionFondAction.nothing;
-                        break;
-                    default:
-                        break;
+                    switch (versionDict[currentVersionNum].state)
+                    {
+                        case Version.State.banned:
+                            args.action = OnNewVersionFondAction.shutdown;
+                            break;
+                        case Version.State.deprecated:
+                            args.action = OnNewVersionFondAction.slient;
+                            break;
+                        case Version.State.outdated:
+                            args.action = OnNewVersionFondAction.alert;
+                            break;
+                        case Version.State.stable:
+                            break;
+                        case Version.State.beta:
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 VersionGetHandler(this, args);
             }

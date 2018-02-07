@@ -256,3 +256,4 @@ No Update Found=当前已是最新版本
 Downloading=下载中
 Feisulv Node is already up to date=暂无飞速率节点可供更新
 No Feisulv Product Found Scan QRcode From Feisulv First=没有检测到飞速率产品,请到官网订购并扫描二维码
+Update Done=更新成功

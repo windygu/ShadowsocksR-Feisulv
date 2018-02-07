@@ -665,7 +665,7 @@ namespace Shadowsocks.View
                 case UpdateChecker.OnNewVersionFondAction.nothing:
                     if (updateChecker.forceUpdate == true)
                     {
-                        ShowBalloonTip(String.Format(I18N.GetString("No Update Found")+"  {0}", UpdateChecker.currentVersionNum), " ", ToolTipIcon.Info, 10000);
+                        ShowBalloonTip(String.Format(I18N.GetString("No Update Found")+"  {0}", UpdateChecker.Name), " ", ToolTipIcon.Info, 10000);
                     }
                     break;
                 case UpdateChecker.OnNewVersionFondAction.alert:
@@ -727,30 +727,27 @@ namespace Shadowsocks.View
             {
                 Logging.LogUsefulException(e.Error);
             }
-            Logging.Log(LogLevel.Debug, "http download completed");
-
             controller.Stop();
             FileStream fs = File.Create("update.bat", 1000, FileOptions.None);
 
             StreamWriter sw = new StreamWriter(fs);
             sw.Write(
-@"
-ren %1 %3
-taskkill -f -im %1
+$@"
+ren %1 {$GetOldVersionFileName()}
+taskkill -f -im 
 rename %2 %1
 start %1
-del %0
 ");
             sw.Close();
             fs.Close();
             Process proc = new Process();
             proc.StartInfo.FileName = "update.bat";
-            proc.StartInfo.Arguments = GetCurrentFIleName() + " " + GetLastVersionFileName() + " " + GetOldVersionFileName() ;
+            proc.StartInfo.Arguments = CurrentFileName + " " + GetLastVersionFileName();
             proc.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;
 
-            proc.Start();
+     //       proc.Start();
         }
 
         void notifyIcon1_BalloonTipClicked(object sender, EventArgs e)
