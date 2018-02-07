@@ -94,7 +94,7 @@ namespace Shadowsocks.View
             //_notifyIcon.MouseDoubleClick += notifyIcon1_DoubleClick;
 
             updateChecker = new UpdateChecker();
-            updateChecker.NewVersionFound += updateChecker_NewVersionFound;
+            updateChecker.VersionGetHandler += updateChecker_VersionGetHandler;
 
             this.feisulvController = Controllers.feisulvController = new FeisulvController(controller);
             feisulvController.FeisulvNodeUpdateFinish += FeisulvController_FeisulvNodeUpdateFinish;
@@ -117,7 +117,14 @@ namespace Shadowsocks.View
             timerDelayCheckUpdate.Start();
         }
 
-
+        private void CheckUpdateDone()
+        {
+            if (System.IO.File.Exists(GetOldVersionFileName()))
+            {
+                System.IO.File.Delete(GetOldVersionFileName());
+                ShowBalloonTip(string.Format(I18N.GetString("{0} {1} Update Done"), UpdateChecker.Name, updateChecker.CurrentVersion.versionNum),"", ToolTipIcon.Info, 10000);
+            }
+        }
 
 
         private void FeisulvController_FeisulvNodeUpdateFinish(object sender, FeisulvController.FeisulvNodeUpdateFinishEventArgs e)
@@ -143,6 +150,14 @@ namespace Shadowsocks.View
                     }
                 }
                 ShowBalloonTip(I18N.GetString("Feisulv Node Updated"), result, ToolTipIcon.Info, 1000);
+            }
+            else
+            {
+                if (e.forceUpdate==true)
+                {
+                    ShowBalloonTip(I18N.GetString("Feisulv Node is already up to date"), e.message, ToolTipIcon.Info, 1000);
+
+                }
             }
         }
 
@@ -369,7 +384,7 @@ namespace Shadowsocks.View
 
         private void UpdateNodeFromFeisulv(object sender, EventArgs e)
         {
-            Controllers.feisulvController.FeisulvNodeUpdate();
+            Controllers.feisulvController.FeisulvNodeUpdate(true);
         }
 
         private void controller_ConfigChanged(object sender, EventArgs e)
@@ -639,7 +654,7 @@ namespace Shadowsocks.View
             }
         }
 
-        void updateChecker_NewVersionFound(object sender, UpdateChecker.NewVersionFoundEventArgs e)
+        void updateChecker_VersionGetHandler(object sender, UpdateChecker.NewVersionFoundEventArgs e)
         {
 
             switch (e.action)
@@ -648,6 +663,10 @@ namespace Shadowsocks.View
                     Application.Exit();
                     break;
                 case UpdateChecker.OnNewVersionFondAction.nothing:
+                    if (updateChecker.forceUpdate == true)
+                    {
+                        ShowBalloonTip(String.Format(I18N.GetString("{0} No Update Found"), UpdateChecker.Name), "", ToolTipIcon.Info, 10000);
+                    }
                     break;
                 case UpdateChecker.OnNewVersionFondAction.alert:
                     if (!this.UpdateItem.Visible)
@@ -660,6 +679,11 @@ namespace Shadowsocks.View
                     this.UpdateItem.Text = String.Format(I18N.GetString("New version {0} {1} available"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum);
                     break;
                 case UpdateChecker.OnNewVersionFondAction.slient:
+                    if (updateChecker.forceUpdate == true)
+                    {
+                        ShowBalloonTip(String.Format(I18N.GetString("{0} {1} Update Found"), UpdateChecker.Name, updateChecker.LatestVersion.versionNum),
+                                I18N.GetString("Downloading"), ToolTipIcon.Info, 10000);
+                    }
                     DownloadNewVersion(updateChecker.LatestVersion.url);
                     break;
                 default:
@@ -676,26 +700,36 @@ namespace Shadowsocks.View
         }
         string CurrentFileName;
         string LastVersionFileName;
+        public string GetCurrentFIleName()
+        {
+            return Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+        }
+        public string GetLastVersionFileName()
+        {
+            return GetCurrentFIleName() + ".newversion";
+        }
+        public string GetOldVersionFileName()
+        {
+            return GetCurrentFIleName() + ".old";
+        }
+
         void DownloadNewVersion(string url)
         {
             WebClient http = new WebClient();
             http.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.3319.102 Safari/537.36");
             http.DownloadFileCompleted += Http_DownloadFileCompleted;
-            CurrentFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
-            LastVersionFileName = CurrentFileName + ".newversion";
-            http.DownloadFileAsync(new Uri(url), LastVersionFileName);
-
+            http.DownloadFileAsync(new Uri(url), GetLastVersionFileName());
         }
 
         private void Http_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
             if (e.Error != null)
             {
-                return;
-
+                Logging.LogUsefulException(e.Error);
             }
             controller.Stop();
             FileStream fs = File.Create("update.bat", 1000, FileOptions.None);
+
             StreamWriter sw = new StreamWriter(fs);
             sw.Write(
                 @"
@@ -711,7 +745,7 @@ del %0
             fs.Close();
             Process proc = new Process();
             proc.StartInfo.FileName = "update.bat";
-            proc.StartInfo.Arguments = CurrentFileName + " " + LastVersionFileName;
+            proc.StartInfo.Arguments = CurrentFileName + " " + GetLastVersionFileName();
             proc.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             proc.StartInfo.UseShellExecute = false;
             proc.StartInfo.CreateNoWindow = true;

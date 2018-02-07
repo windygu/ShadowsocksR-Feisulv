@@ -16,15 +16,35 @@ namespace Shadowsocks.Controller
         //  private const string UpdateURL = "https://raw.githubusercontent.com/breakwa11/breakwa11.github.io/master/update/ssr-win-4.0.xml";
         private const string UpdateURL = "http://tools.moonkop.com/upload/ssr/versions/versionList.xml";
         public Version LatestVersion;
-        public event EventHandler<NewVersionFoundEventArgs> NewVersionFound;
-        public class NewVersionFoundEventArgs:EventArgs
+        public event EventHandler<NewVersionFoundEventArgs> VersionGetHandler;
+        public class NewVersionFoundEventArgs : EventArgs
         {
             public OnNewVersionFondAction action;
         }
-        public Version CurrentVersion;
+        private Version currentVersion;
+
+        public Version CurrentVersion
+        {
+            get
+            {
+                if (currentVersion==null)
+                {
+                    currentVersion= new Version(currentVersionNum);
+                }
+                return currentVersion;
+            }
+
+            set
+            {
+                currentVersion = value;
+            }
+        }
         public const string Name = "ShadowsocksR";
         public const string Copyright = "Copyright © BreakWa11 2017. Fork from Shadowsocks by clowwindy";
-        public const string currentVersionNum = "4.7.1";
+        public const string currentVersionNum = "4.7.3";
+        public bool forceUpdate = false;
+
+
         public enum OnNewVersionFondAction
         {
             shutdown = -1,
@@ -56,8 +76,10 @@ namespace Shadowsocks.Controller
         private XmlDocument doc;
         private Version.State preferVersion;
 
-        public void CheckUpdate(Configuration config)
+
+        public void CheckUpdate(Configuration config, bool forceUpdate = false)
         {
+            this.forceUpdate = forceUpdate;
             try
             {
                 WebClient http = new WebClient();
@@ -178,6 +200,8 @@ namespace Shadowsocks.Controller
         //    return CompareVersion(version, currentVersion) > 0;
         //}
         Dictionary<string, Version> versionDict;
+
+
         private void http_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             try
@@ -213,18 +237,18 @@ namespace Shadowsocks.Controller
                         args.action = OnNewVersionFondAction.slient;
                         break;
                     case Version.State.outdated:
-                        args.action =  OnNewVersionFondAction.alert;
+                        args.action = OnNewVersionFondAction.alert;
                         break;
                     case Version.State.stable:
-                        return;
+                        args.action = OnNewVersionFondAction.nothing;
                         break;
                     case Version.State.beta:
-                        return;
+                        args.action = OnNewVersionFondAction.nothing;
                         break;
                     default:
                         break;
                 }
-                NewVersionFound(this,args);
+                VersionGetHandler(this, args);
             }
             catch (Exception ex)
             {
@@ -237,18 +261,21 @@ namespace Shadowsocks.Controller
             }
         }
 
-        private void VersionOutdated()
-        {
-            
-        }
-
         public class Version
         {
+            public Version()
+            {
+
+            }
+            public Version(string versionNum)
+            {
+                this.versionNum = versionNum;
+            }
             public enum State
             {
                 banned = -3,
                 outdated = -1,
-                deprecated=-2,
+                deprecated = -2,
                 stable = 0,
                 beta = 1
             }

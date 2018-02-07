@@ -252,4 +252,7 @@ Success=成功
 Feisulv Node Updated=飞速率节点更新成功
 Removed=下线
 Added=上线
-
+No Update Found=当前已是最新版本
+Downloading=下载中
+Feisulv Node is already up to date=暂无飞速率节点可供更新
+No Feisulv Product Found Scan QRcode From Feisulv First=没有检测到飞速率产品,请到官网订购并扫描二维码

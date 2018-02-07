@@ -20,7 +20,8 @@ namespace Shadowsocks.Controller
         {
             public List<Server> RemovedServers;
             public List<Server> AddedServers;
-            public string message;
+            public string message = " ";
+            internal bool forceUpdate;
         }
         public event EventHandler<FeisulvNodeUpdateFinishEventArgs> FeisulvNodeUpdateFinish;
         string serverStringContent;
@@ -51,7 +52,7 @@ namespace Shadowsocks.Controller
             foreach (var rec in contents)
             {
                 string[] recs = rec.Split('|');
-                FeisulvHost temp = new FeisulvHost(recs[1].Replace("\n","").Replace("\r",""), recs[2].Replace("\n", "").Replace("\r", ""));
+                FeisulvHost temp = new FeisulvHost(recs[1].Replace("\n", "").Replace("\r", ""), recs[2].Replace("\n", "").Replace("\r", ""));
                 feisulvHosts.Add(temp);
             }
         }
@@ -66,9 +67,9 @@ namespace Shadowsocks.Controller
                 content = Utils.GetHttpContentFromUrl("http://www.feisulv.com/test.php");
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Logging.LogUsefulException(ex);
                 throw;
             }
             content = content.Replace(" ", "");//去空格
@@ -119,10 +120,16 @@ namespace Shadowsocks.Controller
         /// 从飞速率服务器获取节点更新数据
         /// </summary>
         /// <returns></returns>
-        public void FeisulvNodeUpdate()
+        public void FeisulvNodeUpdate(bool forceUpdate = false)
         {
+            FeisulvNodeUpdateFinishEventArgs args = new FeisulvNodeUpdateFinishEventArgs();
+            args.forceUpdate = forceUpdate;
             products = GetExistProductsFromConfig();
             products = DereplicationProducts();
+            if (products.Count == 0)
+            {
+                args.message = I18N.GetString("No Feisulv Product Found Scan QRcode From Feisulv First");
+            }
             GetFeiSulvHosts();
             //  this.ClearFeisulvServers();
             //      ClearFeisulvServers();
@@ -150,7 +157,6 @@ namespace Shadowsocks.Controller
 
                 }
             }
-            FeisulvNodeUpdateFinishEventArgs args = new FeisulvNodeUpdateFinishEventArgs();
 
             args.RemovedServers = RemovedServers;
             args.AddedServers = AddServers;
